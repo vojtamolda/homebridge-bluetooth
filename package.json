@@ -1,0 +1,23 @@
+{
+  "name": "homebridge-bluetooth",
+  "version": "0.0.0",
+  "description": "Homebridge plugin to expose Bluetooth Low Energy peripherals as HomeKit accessories",
+  "license": "MIT",
+  "keywords": [
+    "homebridge-plugin", "bluetooth", "bluetooth low energy"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/vojtamolda/homebridge-bluetooth.git"
+  },
+  "bugs": {
+    "url": "http:://github.com/vojtamolda/homebridge-bluetooth/issues"
+  },
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "dependencies": {
+    "noble": ">=1.6.0"
+  }
+}
