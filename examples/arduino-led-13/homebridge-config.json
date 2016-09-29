@@ -1,0 +1,20 @@
+{
+    "bridge": {
+        "name": "Raspberry Pi 3",
+        "username": "CC:22:3D:E3:CE:30",
+        "port": 51826,
+        "pin": "031-45-154"
+    },
+
+    "description": "Raspberry Pi 3 HomeKit Bridge",
+
+    "accessories": [
+        {
+            "accessory": "Bluetooth Low Energy",
+            "name": "Arduino 101",
+            "address": "01:23:45:67:89:ab",
+            "led_service": "19B10010-E8F2-537E-4F6C-D104768A1214",
+            "led_characteristic": "19B10011-E8F2-537E-4F6C-D104768A1214",
+        }
+    ]
+}
