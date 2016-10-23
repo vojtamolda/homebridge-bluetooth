@@ -1,0 +1,5 @@
+examples/
+images/
+.idea/
+.gitignore
+.npmignore
