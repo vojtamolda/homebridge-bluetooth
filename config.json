@@ -1,0 +1,66 @@
+{
+  "bridge": {
+    "name": "Raspberry Pi 3",
+    "username": "CC:22:3D:E3:CE:30",
+    "port": 51826,
+    "pin": "031-45-154"
+  },
+  "description": "Raspberry Pi 3 Homebridge-Bluetooth Example",
+
+  "platforms": [
+    {
+      "platform": "Bluetooth",
+      "accessories": [
+        {
+          "name": "Arduino 101",
+          "name_note": "Name of the accessory as shown in the Home app on iOS.",
+
+          "address": "01:23:45:67:89:AB",
+          "address_note": "Bluetooth address of the accessory. Non-matching devices are ignored.",
+
+          "services": [
+            {
+              "name": "LED 13",
+              "name_note": "Name of the service as shown in the Home app on iOS.",
+
+              "type": "Lightbulb",
+              "type_note1": "Type of the service - i.e. Lightbulb, Switch, Lock, HumiditySensor, ...",
+              "type_note2": "Must match this list - https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js",
+              "type_note3": "Service.Lightbulb has a mandatory On characteristic and Brightness, Hue and Saturation are optional.",
+
+              "UUID": "A7B10010-EEEE-5377-FF6C-D104768A1214",
+              "UUID_note": "Bluetooth UUID of the service. Capitalization and dashes doesn't matter.",
+
+              "characteristics": [
+                {
+                  "type": "On",
+                  "type_note1": "Type of the characteristic - i.e. On, Brightness, CurrentHumidity, CurrentTemperature, ...",
+                  "type_note2": "Must match this list - https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js",
+                  "type_note3": "Characteristic.On is a BOOL value and expects READ, WRITE and NOTIFY permissions.",
+
+                  "UUID": "A7B10010-EEEE-5377-FF6C-D104768A1214",
+                  "UUID_note": "Bluetooth UUID of the characteristic. Capitalization and dashes doesn't matter."
+                },
+
+                {
+                  "type": "Brightness",
+                  "type_note1": "Type of the characteristic - i.e. On, Brightness, CurrentHumidity, CurrentTemperature, ...",
+                  "type_note2": "Must match this list - https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js",
+                  "type_note3": "Characteristic.Brightness is an INT value and expects READ, WRITE and NOTIFY permissions.",
+
+                  "UUID": "A7B10012-EEEE-5377-FF6C-D104768A1214",
+                  "UUID_note": "Bluetooth UUID of the characteristic. Capitalization and dashes doesn't matter."
+                }
+              ],
+              "characteristics_note1": "List of Bluetooth characteristics that will be exposed to HomeKit.",
+              "characteristics_note2": "Characteristics with non-matching UUIDs are ignored."
+            }
+
+          ],
+          "services_note1": "List of Bluetooth services that will be exposed to HomeKit.",
+          "services_note2": "Services with non-matching UUIDs are ignored."
+        }
+      ]
+    }
+  ]
+}
