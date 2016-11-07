@@ -8,64 +8,70 @@ module.exports = function (characteristic) {
 };
 
 
-function BluetoothCharacteristic(log, config, bluetoothService) {
+function BluetoothCharacteristic(log, config, nobleCharacteristic, parentBluetoothService) {
   this.log = log;
-  this.config = config;
-  this.prefix = bluetoothService.prefix + " " + Chalk.green("[" + config.type + "]");
+  
+  this.init(config, parentBluetoothService);
+  this.setup(nobleCharacteristic, parentBluetoothService);
+} 
 
-  this.nobleCharacteristic = null;
-  if (config.type in Characteristic) {
-    this.type = config.type;
-    var CharacteristicType = Characteristic[this.type]; // For example - Characteristic.Brightness
-    this.homebridgeCharacteristic = bluetoothService.homebridgeService.getCharacteristic(CharacteristicType);
-  } else {
-    throw new Error("Type Characteristic." + this.type + " is not available. See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
+
+BluetoothCharacteristic.prototype.init = function (config, parentBluetoothService) {
+  if (!config.type) {
+    throw new Error(this.prefix + " Missing mandatory config 'type'");
   }
-
-  if (config.UUID) {
-    this.UUID = trimUUID(config.UUID);
-  } else {
-    throw new Error("Missing bluetooth UUID for Characteristic." + this.type + ".");
+  this.type = config.type;
+  this.prefix = parentBluetoothService.prefix + " " + Chalk.green("[" + this.type + "]");
+  
+  if (!config.UUID) {
+    throw new Error(this.prefix + " Missing mandatory config 'UUID'");
   }
-}
+  this.UUID = config.UUID;
+  
+  this.log.info(this.prefix, "Initialized | Characteristic." + this.type + " - " + this.UUID);
+};
 
 
-BluetoothCharacteristic.prototype.onDiscover = function (nobleCharacteristic) {
-  this.log.info(this.prefix, "Discovered | Characteristic." + this.type + " - " + this.UUID);
+BluetoothCharacteristic.prototype.setup = function (nobleCharacteristic, parentBluetoothService) {
+  var characteristicType = Characteristic[this.type]; // For example - Characteristic.Brightness
+  if (!characteristicType) {
+    throw new Error(this.prefix + " Characteristic type '" + this.type + "' is not defined. See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
+  }
+  this.homebridgeCharacteristic = parentBluetoothService.homebridgeService.getCharacteristic(characteristicType);
+  
   this.nobleCharacteristic = nobleCharacteristic;
-
   for (var permission of this.homebridgeCharacteristic.props['perms']) {
     switch (permission) {
-
+      
       case Characteristic.Perms.READ:
         // Corresponds to BLEPeripheral/BLERead property
         if (this.nobleCharacteristic.properties.indexOf('read') >= 0) {
           this.homebridgeCharacteristic.on('get', this.get.bind(this));
         } else {
-          this.log.warn(this.prefix, "Read from bluetooth haracteristic not permitted | " + this.UUID);
+          this.log.warn(this.prefix, "Read from bluetooth characteristic not permitted");
         }
         break;
-
+      
       case Characteristic.Perms.WRITE:
         // Corresponds to BLEPeripheral/BLEWrite property
         if (this.nobleCharacteristic.properties.indexOf('write') >= 0) {
           this.homebridgeCharacteristic.on('set', this.set.bind(this));
         } else {
-          this.log.warn(this.prefix, "Write to bluetooth characteristic not permitted | " + this.UUID);
+          this.log.warn(this.prefix, "Write to bluetooth characteristic not permitted");
         }
         break;
-
+      
       case Characteristic.Perms.NOTIFY:
         // Corresponds to BLEPeripheral/BLENotify property
         if (this.nobleCharacteristic.properties.indexOf('notify') >= 0) {
           this.nobleCharacteristic.on('read', this.notify.bind(this));
           this.nobleCharacteristic.subscribe(function (error) {
             if (error) {
-              this.log.warn(this.prefix, "Subscribe to bluetooth characteristic failed | " + this.UUID);
+              this.log.warn(this.prefix, "Subscribe to bluetooth characteristic failed");
             }
           }.bind(this));
         } else {
-          this.log(this.prefix, "Subscribe to bluetooth characteristic not permitted | " + this.UUID);
+          this.log(this.prefix, "Subscribe to bluetooth characteristic not permitted");
         }
         break;
     }
@@ -112,22 +118,22 @@ BluetoothCharacteristic.prototype.toBuffer = function (value) {
       buffer = Buffer.alloc(1);
       buffer.writeInt8(value ? 1 : 0, 0);
       break;
-
+      
     case Characteristic.Formats.INT:
       // Corresponds to BLEPeripheral/BLEIntCharacteristic
       buffer = Buffer.alloc(4);
       buffer.writeInt32LE(value, 0);
       break;
-
+      
     case Characteristic.Formats.FLOAT:
       // Corresponds to BLEPeripheral/BLEFloatCharacteristic
       buffer = Buffer.alloc(4);
       buffer.writeFloatLE(value, 0);
       break;
-
+      
     default:
-      // TODO Add support for more Characteristic.Formats
-      this.log.warn(this.prefix, "Unsupported data conversion | " + this.UUID);
+      // bluefruit.ino Add support for more Characteristic.Formats
+      this.log.error(this.prefix, "Unsupported data conversion");
       buffer = Buffer.alloc(1);
       buffer.writeInt8(0, 0);
       break;
@@ -143,28 +149,27 @@ BluetoothCharacteristic.prototype.fromBuffer = function (buffer) {
       // Corresponds to BLECharCharacteristic
       value = buffer.readInt8(0);
       break;
-
+      
     case Characteristic.Formats.INT:
       // Corresponds to BLEIntCharacteristic
       value = buffer.readInt32LE(0);
       break;
-
+      
     case Characteristic.Formats.FLOAT:
       // Corresponds to BLEFloatCharacteristic
       value = buffer.readFloatLE(0);
       break;
-
+      
     default:
-      // TODO Add support for more Characteristic.Formats
+      // bluefruit.ino Add support for more Characteristic.Formats
       value = 0;
-      this.log.warn(this.prefix, "Unsupported data conversion | " + this.UUID);
+      this.log.error(this.prefix, "Unsupported data conversion");
   }
   return value;
 };
 
 
-BluetoothCharacteristic.prototype.onDisconnect = function () {
-  this.log.info(this.prefix, "Disconnected | " + this.UUID);
+BluetoothCharacteristic.prototype.disconnect = function () {
   if (this.nobleCharacteristic.properties.indexOf('read') >= 0) {
     this.homebridgeCharacteristic.removeAllListeners('get');
   }
@@ -175,10 +180,8 @@ BluetoothCharacteristic.prototype.onDisconnect = function () {
     this.nobleCharacteristic.unsubscribe(null);
     this.nobleCharacteristic.removeAllListeners('read');
   }
+  
   this.nobleCharacteristic = null;
+  this.homebridgeCharacteristic = null;
+  this.log.info(this.prefix, "Disconnected");
 };
-
-
-function trimUUID(uuid) {
-  return uuid.toLowerCase().replace(/:/g, "").replace(/-/g, "");
-}

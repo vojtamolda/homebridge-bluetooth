@@ -10,40 +10,52 @@ module.exports = function (accessory, bluetoothService, uuidGen) {
 };
 
 
-function BluetoothAccessory(log, config, homebridgeAPI) {
+function BluetoothAccessory(log, config, nobleAccessory, parentBluetoothPlatform) {
   this.log = log;
-  this.config = config;
-  this.name = config.name;
-  this.address = config.address.toLowerCase();
-  this.prefix = Chalk.blue("[" + config.name + "]");
 
-  this.nobleAccessory = null;
-  this.homebridgeAccessory = new Accessory(config.name, UUIDGen.generate(config.name));
-  this.homebridgeAccessory.updateReachability(false);
-
-  this.bluetoothServices = [];
-  for (var serviceConfig of config.services) {
-    var bluetoothService = new BluetoothService(log, serviceConfig, this);
-    this.bluetoothServices.push(bluetoothService);
-  }
+  this.init(config, parentBluetoothPlatform);
+  this.setup(nobleAccessory, parentBluetoothPlatform);
 }
 
 
-BluetoothAccessory.prototype.onConnect = function (nobleAccessory) {
-  this.log.info(this.prefix, "Connected | " + nobleAccessory.advertisement.localName + " - "+ this.address);
-
-  this.nobleAccessory = nobleAccessory;
-  this.homebridgeAccessory.updateReachability(true);
-
-  var nobleServiceUUIDs = [];
-  for (var bluetoothService of this.bluetoothServices) {
-    nobleServiceUUIDs.push(bluetoothService.UUID);
+BluetoothAccessory.prototype.init = function (config, parentBluetoothPlatform) {
+  if (!config.name) {
+    throw new Error("Missing mandatory config 'name'");
   }
-  this.nobleAccessory.discoverServices(nobleServiceUUIDs, this.onDiscoverServices.bind(this));
+  this.name = config.name;
+  this.prefix = Chalk.blue("[" + config.name + "]");
+
+  if (!config.address) {
+    throw new Error(this.prefix + " Missing mandatory config 'address'");
+  }
+  this.address = config.address;
+
+  if (!config.services || !(config.services instanceof Array)) {
+    throw new Error(this.prefix + " Missing mandatory config 'services'");
+  }
+  this.serviceConfigs = {};
+  this.bluetoothServices = {};
+  for (var serviceConfig of config.services) {
+    var serviceUUID = trimUUID(serviceConfig.UUID);
+    this.serviceConfigs[serviceUUID] = serviceConfig;
+  }
+
+  this.log.info(this.prefix, "Connected | " + this.name + " - " + this.address);
 };
 
 
-BluetoothAccessory.prototype.onDiscoverServices = function (error, nobleServices) {
+BluetoothAccessory.prototype.setup = function (nobleAccessory, parentBluetoothPlatform) {
+  this.homebridgeAccessory = new Accessory(this.name, UUIDGen.generate(this.name));
+  this.homebridgeAccessory.updateReachability(true);
+  this.bluetoothPlatform = parentBluetoothPlatform;
+  this.bluetoothPlatform.homebridgeAPI.registerPlatformAccessories("homebridge-bluetooth", "Bluetooth", [this.homebridgeAccessory]);
+
+  this.nobleAccessory = nobleAccessory;
+  this.nobleAccessory.discoverServices([], this.discoverServices.bind(this));
+};
+
+
+BluetoothAccessory.prototype.discoverServices = function (error, nobleServices) {
   if (error) {
     this.log.error(this.prefix, "Discover services failed | " + error);
     return;
@@ -54,16 +66,18 @@ BluetoothAccessory.prototype.onDiscoverServices = function (error, nobleServices
   }
 
   for (var nobleService of nobleServices) {
-    for (var bluetoothService of this.bluetoothServices) {
-      if (bluetoothService.UUID == nobleService.uuid) {
-        bluetoothService.onDiscover(nobleService);
-      }
+    var serviceUUID = trimUUID(nobleService.uuid);
+    var serviceConfig = this.serviceConfigs[serviceUUID];
+    if (!serviceConfig) {
+      this.log.info(this.prefix, "Ignored | Service - " + nobleService.uuid);
+      continue;
     }
+    this.bluetoothServices[serviceUUID] = new BluetoothService(this.log, serviceConfig, nobleService, this);
   }
 };
 
 
-BluetoothAccessory.prototype.onIdentify = function (paired, callback) {
+BluetoothAccessory.prototype.identify = function (paired, callback) {
   this.log.info(this.prefix, "Identify");
   /*  if (this.nobleAccessory) {
    this.alertCharacteristic.write(new Buffer([0x02]), true);
@@ -78,10 +92,20 @@ BluetoothAccessory.prototype.onIdentify = function (paired, callback) {
 };
 
 
-BluetoothAccessory.prototype.onDisconnect = function (homebridgeAPI) {
-  this.log.info(this.prefix, "Disconnected | " + this.address);
+BluetoothAccessory.prototype.disconnect = function () {
+  for (var serviceUUID in this.bluetoothServices) {
+    this.bluetoothServices[serviceUUID].disconnect();
+  }
   this.homebridgeAccessory.removeAllListeners('identify');
   this.homebridgeAccessory.updateReachability(false);
-  
+  this.bluetoothPlatform.homebridgeAPI.unregisterPlatformAccessories("homebridge-bluetooth", "Bluetooth", [this.homebridgeAccessory]);
+
   this.nobleAccessory = null;
+  this.homebridgeAccessory = null;
+  this.log.info(this.prefix, "Disconnected");
 };
+
+
+function trimUUID(uuid) {
+  return uuid.toLowerCase().replace(/:/g, "").replace(/-/g, "");
+}

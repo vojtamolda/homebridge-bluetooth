@@ -9,49 +9,58 @@ module.exports = function (service, bluetoothCharacteristic) {
 };
 
 
-function BluetoothService(log, config, bluetoothAccessory) {
+function BluetoothService(log, config, nobleService, parentBluetoothAccessory) {
   this.log = log;
-  this.config = config;
-  this.name = config.name;
-  this.prefix = bluetoothAccessory.prefix + " " + Chalk.magenta("[" + config.name + "]");
 
-  this.nobleService = null;
-  if (config.type in Service) {
-    this.type = config.type;
-    var ServiceType = Service[this.type]; // For example - Service.Lightbulb
-    this.homebridgeService = bluetoothAccessory.homebridgeAccessory.addService(ServiceType, this.name);
-  } else {
-    throw new Error("Type Service." + this.type + " is not available. See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
-  }
-
-  if (config.UUID) {
-    this.UUID = trimUUID(config.UUID);
-  } else {
-    throw new Error("Missing bluetooth UUID for Service." + this.type + ".");
-  }
-
-  this.bluetoothCharacteristics = [];
-  for (var characteristicConfig of config.characteristics) {
-    var bluetoothCharacteristic = new BluetoothCharacteristic(log, characteristicConfig, this);
-    this.bluetoothCharacteristics.push(bluetoothCharacteristic);
-  }
-  
+  this.init(config, parentBluetoothAccessory);
+  this.setup(nobleService, parentBluetoothAccessory);
 }
 
 
-BluetoothService.prototype.onDiscover = function (nobleService) {
-  this.log.info(this.prefix, "Discovered | Service." + this.type + " - " + this.UUID);
-  this.nobleService = nobleService;
-
-  var nobleCharacteristicUUIDs = [];
-  for (var bluetoothCharacteristic of this.bluetoothCharacteristics) {
-    nobleCharacteristicUUIDs.push(bluetoothCharacteristic.UUID);
+BluetoothService.prototype.init = function (config, parentBluetoothAccessory) {
+  if (!config.name) {
+    throw new Error("Missing mandatory config 'name'");
   }
-  this.nobleService.discoverCharacteristics(nobleCharacteristicUUIDs, this.onDiscoverCharacteristics.bind(this));
+  this.name = config.name;
+  this.prefix = parentBluetoothAccessory.prefix + " " + Chalk.magenta("[" + this.name + "]");
+
+  if (!config.type) {
+    throw new Error(this.prefix + " Missing mandatory config 'type'");
+  }
+  this.type = config.type;
+
+  if (!config.UUID) {
+    throw new Error(this.prefix + " Missing mandatory config 'UUID'");
+  }
+  this.UUID = config.UUID;
+
+  if (!config.characteristics || !(config.characteristics instanceof Array)) {
+    throw new Error(this.prefix + " Missing mandatory config 'characteristics'");
+  }
+  this.characteristicConfigs = {};
+  this.bluetoothCharacteristics = {};
+  for (var characteristicConfig of config.characteristics) {
+    var characteristicUUID = trimUUID(characteristicConfig.UUID);
+    this.characteristicConfigs[characteristicUUID] = characteristicConfig;
+  }
+
+  this.log.info(this.prefix, "Initialized | Service." + this.type + " - " + this.UUID);
 };
 
 
-BluetoothService.prototype.onDiscoverCharacteristics = function (error, nobleCharacteristics) {
+BluetoothService.prototype.setup = function (nobleService, parentBluetoothAccessory) {
+  var serviceType = Service[this.type]; // For example - Service.Lightbulb
+  if (!serviceType) {
+    throw new Error(this.prefix + " Service type '" + this.type + "' is not defined. See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
+  }
+  this.homebridgeService = parentBluetoothAccessory.homebridgeAccessory.addService(serviceType, this.name);
+
+  this.nobleService = nobleService;
+  this.nobleService.discoverCharacteristics([], this.discoverCharacteristics.bind(this));
+};
+
+
+BluetoothService.prototype.discoverCharacteristics = function (error, nobleCharacteristics) {
   if (error) {
     this.log.error(this.prefix, "Discover characteristics failed | " + error);
     return;
@@ -62,21 +71,25 @@ BluetoothService.prototype.onDiscoverCharacteristics = function (error, nobleCha
   }
 
   for (var nobleCharacteristic of nobleCharacteristics) {
-    for (var bluetoothCharacteristic of this.bluetoothCharacteristics) {
-      if (bluetoothCharacteristic.UUID == nobleCharacteristic.uuid) {
-        bluetoothCharacteristic.onDiscover(nobleCharacteristic);
-      }
+    var characteristicUUID = trimUUID(nobleCharacteristic.uuid);
+    var characteristicConfig = this.characteristicConfigs[characteristicUUID];
+    if (!characteristicConfig) {
+      this.log.info(this.prefix, "Ignored | Characteristic - " + nobleCharacteristic.uuid);
+      continue;
     }
+    this.bluetoothCharacteristics[characteristicUUID] = new BluetoothCharacteristic(this.log, characteristicConfig, nobleCharacteristic, this);
   }
 };
 
 
-BluetoothService.prototype.onDisconnect = function () {
-  this.log.info(this.prefix, "Disconnected | " + this.UUID);
-  for (var bluetoothCharacteristic of this.bluetoothCharacteristics) {
-    bluetoothCharacteristic.onDisconnect();
+BluetoothService.prototype.disconnect = function () {
+  for (var characteristicUUID in this.bluetoothCharacteristics) {
+    this.bluetoothCharacteristics[characteristicUUID].disconnect();
   }
+
   this.nobleService = null;
+  this.homebridgeService = null;
+  this.log.info(this.prefix, "Disconnected");
 };
 
 

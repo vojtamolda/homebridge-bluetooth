@@ -10,24 +10,31 @@ module.exports = function (noble, bluetoothAccessory) {
 
 function BluetoothPlatform(log, config, homebridgeAPI) {
   this.log = log;
-  this.config = config;
+
+  this.init(config);
   this.homebridgeAPI = homebridgeAPI;
-  
-  this.configs = {};
-  config.accessories.map(function(accessoryConfig) {
-    this.configs[accessoryConfig.address.toLowerCase()] = accessoryConfig;
-  }.bind(this));
-  
-  this.homebridgeAPI.on('didFinishLaunching', this.onDidFinishLaunching.bind(this));
+  this.homebridgeAPI.on('didFinishLaunching', this.didFinishLaunching.bind(this));
 }
 
-
-BluetoothPlatform.prototype.onDidFinishLaunching = function () {
-  Noble.on('stateChange', this.onStateChange.bind(this));
+BluetoothPlatform.prototype.init = function (config) {
+  if (!config.accessories || !(config.accessories instanceof Array)) {
+    throw new Error("Missing mandatory config 'accessories'");
+  }
+  this.accessoryConfigs = {};
+  this.bluetoothAccessories = {};
+  for (var accessoryConfig of config.accessories) {
+    var accessoryAddress = trimAddress(accessoryConfig.address);
+    this.accessoryConfigs[accessoryAddress] = accessoryConfig;
+  }
 };
 
 
-BluetoothPlatform.prototype.onStateChange = function (state) {
+BluetoothPlatform.prototype.didFinishLaunching = function () {
+  Noble.on('stateChange', this.stateChange.bind(this));
+};
+
+
+BluetoothPlatform.prototype.stateChange = function (state) {
   if (state != 'poweredOn') {
     this.log.info("Stopped | " + state);
     Noble.stopScanning();
@@ -35,7 +42,7 @@ BluetoothPlatform.prototype.onStateChange = function (state) {
 
   this.log.info("Started | " + state);
   Noble.startScanning([], false);
-  Noble.on('discover', this.onDiscoverAccessory.bind(this));
+  Noble.on('discover', this.discover.bind(this));
 };
 
 
@@ -45,41 +52,48 @@ BluetoothPlatform.prototype.configureAccessory = function (bluetoothAccessory) {
 };
 
 
-BluetoothPlatform.prototype.onDiscoverAccessory = function (nobleAccessory) {
-  var address = nobleAccessory.address.toLowerCase();
-  if (! (address in this.configs)) {
+BluetoothPlatform.prototype.discover = function (nobleAccessory) {
+  var accessoryAddress = trimAddress(nobleAccessory.address);
+  var accessoryConfig = this.accessoryConfigs[accessoryAddress];
+  if (!accessoryConfig) {
     this.log.info("Ignored | " + nobleAccessory.advertisement.localName + " - " + nobleAccessory.address);
     return;
   }
-  
+
   this.log.info("Discovered | " + nobleAccessory.advertisement.localName + " - " + nobleAccessory.address);
   nobleAccessory.connect(function (error) {
-    this.onConnectAccessory(error, nobleAccessory)
+    this.connect(error, nobleAccessory)
   }.bind(this));
 };
 
 
-BluetoothPlatform.prototype.onConnectAccessory = function (error, nobleAccessory) {
+BluetoothPlatform.prototype.connect = function (error, nobleAccessory) {
   if (error) {
-    this.log.error("Connecting failed | "  + nobleAccessory.advertisement.localName + " - " + nobleAccessory.address);
+    this.log.error("Connecting failed | " + nobleAccessory.advertisement.localName + " - " + nobleAccessory.address + " | " + error);
     return;
   }
-  
-  var bluetoothAccessory = new BluetoothAccessory(this.log, this.configs[nobleAccessory.address], this.homebridgeAPI);
-  this.homebridgeAPI.registerPlatformAccessories("homebridge-bluetooth", "Bluetooth", [bluetoothAccessory.homebridgeAccessory]);
-  bluetoothAccessory.onConnect(nobleAccessory);
+
+  var accessoryAddress = trimAddress(nobleAccessory.address);
+  var accessoryConfig = this.accessoryConfigs[accessoryAddress];
+  this.bluetoothAccessories[accessoryAddress] = new BluetoothAccessory(this.log, accessoryConfig, nobleAccessory, this);
   nobleAccessory.on('disconnect', function (error) {
-    this.onDisconnectAccessory(error, bluetoothAccessory)
+    this.disconnect(error, this.bluetoothAccessories[accessoryAddress])
   }.bind(this));
 };
 
 
-BluetoothPlatform.prototype.onDisconnectAccessory = function (error, bluetoothAccessory) {
+BluetoothPlatform.prototype.disconnect = function (error, bluetoothAccessory) {
   if (error) {
-    this.log.error("Disconnecting failed | "  + bluetoothAccessory.name + " - " + bluetoothAccessory.address);
+    var nobleAccessory = bluetoothAccessory.nobleAccessory;
+    this.log.error("Disconnecting failed | " + nobleAccessory.advertisement.localName + " - " + nobleAccessory.address + " | " + error);
   }
 
-  this.homebridgeAPI.unregisterPlatformAccessories("homebridge-bluetooth", "Bluetooth", [bluetoothAccessory.homebridgeAccessory]);
+  bluetoothAccessory.nobleAccessory.removeAllListeners('disconnect');
+  bluetoothAccessory.disconnect();
   Noble.startScanning([], false);
 };
 
+
+function trimAddress(address) {
+  return address.toLowerCase().replace(/:/g, "");
+}

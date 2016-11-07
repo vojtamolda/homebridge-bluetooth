@@ -1,6 +1,5 @@
 var Noble, Accessory, Service, Characteristic, UUIDGen;
 
-
 module.exports = function (homebridge) {
   console.log("Homebridge API version: " + homebridge.version);
 
