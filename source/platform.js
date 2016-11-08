@@ -16,6 +16,7 @@ function BluetoothPlatform(log, config, homebridgeAPI) {
   this.homebridgeAPI.on('didFinishLaunching', this.didFinishLaunching.bind(this));
 }
 
+
 BluetoothPlatform.prototype.init = function (config) {
   if (!config.accessories || !(config.accessories instanceof Array)) {
     throw new Error("Missing mandatory config 'accessories'");

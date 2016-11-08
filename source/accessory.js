@@ -78,7 +78,7 @@ BluetoothAccessory.prototype.discoverServices = function (error, nobleServices) 
 
 
 BluetoothAccessory.prototype.identify = function (paired, callback) {
-  this.log.info(this.prefix, "Identify");
+  this.log.info(this.prefix, "Identify | " + paired);
   /*  if (this.nobleAccessory) {
    this.alertCharacteristic.write(new Buffer([0x02]), true);
    setTimeout(function() {

@@ -44,7 +44,6 @@ BluetoothCharacteristic.prototype.setup = function (nobleCharacteristic, parentB
     switch (permission) {
       
       case Characteristic.Perms.READ:
-        // Corresponds to BLEPeripheral/BLERead property
         if (this.nobleCharacteristic.properties.indexOf('read') >= 0) {
           this.homebridgeCharacteristic.on('get', this.get.bind(this));
         } else {
@@ -53,7 +52,6 @@ BluetoothCharacteristic.prototype.setup = function (nobleCharacteristic, parentB
         break;
       
       case Characteristic.Perms.WRITE:
-        // Corresponds to BLEPeripheral/BLEWrite property
         if (this.nobleCharacteristic.properties.indexOf('write') >= 0) {
           this.homebridgeCharacteristic.on('set', this.set.bind(this));
         } else {
@@ -62,7 +60,6 @@ BluetoothCharacteristic.prototype.setup = function (nobleCharacteristic, parentB
         break;
       
       case Characteristic.Perms.NOTIFY:
-        // Corresponds to BLEPeripheral/BLENotify property
         if (this.nobleCharacteristic.properties.indexOf('notify') >= 0) {
           this.nobleCharacteristic.on('read', this.notify.bind(this));
           this.nobleCharacteristic.subscribe(function (error) {
@@ -76,7 +73,6 @@ BluetoothCharacteristic.prototype.setup = function (nobleCharacteristic, parentB
         break;
     }
   }
-
 };
 
 
@@ -92,6 +88,7 @@ BluetoothCharacteristic.prototype.get = function (callback) {
     callback(null, value);
   }.bind(this));
 };
+
 
 BluetoothCharacteristic.prototype.set = function (value, callback) {
   this.log.info(this.prefix, "Set | " + value);
@@ -113,27 +110,47 @@ BluetoothCharacteristic.prototype.notify = function (buffer, notification) {
 BluetoothCharacteristic.prototype.toBuffer = function (value) {
   var buffer;
   switch (this.homebridgeCharacteristic.props['format']) {
-    case Characteristic.Formats.BOOL:
-      // Corresponds to BLECharCharacteristic
+    case Characteristic.Formats.BOOL: // BLECharCharacteristic
       buffer = Buffer.alloc(1);
       buffer.writeInt8(value ? 1 : 0, 0);
       break;
       
-    case Characteristic.Formats.INT:
-      // Corresponds to BLEPeripheral/BLEIntCharacteristic
+    case Characteristic.Formats.INT: // BLEIntCharacteristic
       buffer = Buffer.alloc(4);
       buffer.writeInt32LE(value, 0);
       break;
       
-    case Characteristic.Formats.FLOAT:
-      // Corresponds to BLEPeripheral/BLEFloatCharacteristic
+    case Characteristic.Formats.FLOAT: // BLEFloatCharacteristic
       buffer = Buffer.alloc(4);
       buffer.writeFloatLE(value, 0);
       break;
-      
+
+    case Characteristic.Formats.STRING: // BLECharacteristic
+      buffer = Buffer.from(value, 'utf8');
+      break;
+
+    case Characteristic.Formats.UINT8: // BLEUnsignedCharCharacteristic
+      buffer = Buffer.alloc(1);
+      buffer.writeUInt8(value, 0);
+      break;
+
+    case Characteristic.Formats.UINT16: // BLEUnsignedShortCharacteristic
+      buffer = Buffer.alloc(2);
+      buffer.writeUInt16(value, 0);
+      break;
+
+    case Characteristic.Formats.UINT32: // BLEUnsignedIntCharacteristic
+      buffer = Buffer.alloc(4);
+      buffer.writeUInt32(value, 0);
+      break;
+
+    case Characteristic.Formats.UINT64: // BLEUnsignedLongCharacteristic
+      buffer = Buffer.alloc(8);
+      buffer.writeUIntLE(value, 0, 8);
+      break;
+
     default:
-      // bluefruit.ino Add support for more Characteristic.Formats
-      this.log.error(this.prefix, "Unsupported data conversion");
+      this.log.error(this.prefix, "Unsupported data conversion | " + this.homebridgeCharacteristic.props['format']);
       buffer = Buffer.alloc(1);
       buffer.writeInt8(0, 0);
       break;
@@ -145,25 +162,41 @@ BluetoothCharacteristic.prototype.toBuffer = function (value) {
 BluetoothCharacteristic.prototype.fromBuffer = function (buffer) {
   var value;
   switch (this.homebridgeCharacteristic.props['format']) {
-    case Characteristic.Formats.BOOL:
-      // Corresponds to BLECharCharacteristic
+    case Characteristic.Formats.BOOL: // BLECharCharacteristic
       value = buffer.readInt8(0);
       break;
       
-    case Characteristic.Formats.INT:
-      // Corresponds to BLEIntCharacteristic
+    case Characteristic.Formats.INT: // BLEIntCharacteristic
       value = buffer.readInt32LE(0);
       break;
       
-    case Characteristic.Formats.FLOAT:
-      // Corresponds to BLEFloatCharacteristic
+    case Characteristic.Formats.FLOAT: // BLEFloatCharacteristic
       value = buffer.readFloatLE(0);
       break;
-      
+
+    case Characteristic.Formats.STRING: // BLECharacteristic
+      value = buffer.toString('utf8', 0);
+      break;
+
+    case Characteristic.Formats.UINT8: // BLEUnsignedCharCharacteristic
+      value = buffer.readUInt8(0);
+      break;
+
+    case Characteristic.Formats.UINT16: // BLEUnsignedShortCharacteristic
+      value = buffer.readUInt16LE(0);
+      break;
+
+    case Characteristic.Formats.UINT32: // BLEUnsignedIntCharacteristic
+      value = buffer.readUInt32LE(0);
+      break;
+
+    case Characteristic.Formats.UINT64: // BLEUnsignedLongCharacteristic
+      value = buffer.readUIntLE(0, 8);
+      break;
+
     default:
-      // bluefruit.ino Add support for more Characteristic.Formats
       value = 0;
-      this.log.error(this.prefix, "Unsupported data conversion");
+      this.log.error(this.prefix, "Unsupported data conversion | " + this.homebridgeCharacteristic.props['format']);
   }
   return value;
 };
