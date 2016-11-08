@@ -1,24 +1,17 @@
-var Accessory, BluetoothService, UUIDGen;
+var Accessory, BluetoothService;
 var Chalk = require('chalk');
 
-module.exports = function (accessory, bluetoothService, uuidGen) {
+module.exports = function (accessory, bluetoothService) {
   Accessory = accessory;
   BluetoothService = bluetoothService;
-  UUIDGen = uuidGen;
 
   return BluetoothAccessory;
 };
 
 
-function BluetoothAccessory(log, config, nobleAccessory, parentBluetoothPlatform) {
+function BluetoothAccessory(log, config) {
   this.log = log;
 
-  this.init(config, parentBluetoothPlatform);
-  this.setup(nobleAccessory, parentBluetoothPlatform);
-}
-
-
-BluetoothAccessory.prototype.init = function (config, parentBluetoothPlatform) {
   if (!config.name) {
     throw new Error("Missing mandatory config 'name'");
   }
@@ -33,24 +26,27 @@ BluetoothAccessory.prototype.init = function (config, parentBluetoothPlatform) {
   if (!config.services || !(config.services instanceof Array)) {
     throw new Error(this.prefix + " Missing mandatory config 'services'");
   }
-  this.serviceConfigs = {};
+
+  this.log.info(this.prefix, "Initialized | " + this.name + " - " + this.address);
   this.bluetoothServices = {};
   for (var serviceConfig of config.services) {
     var serviceUUID = trimUUID(serviceConfig.UUID);
-    this.serviceConfigs[serviceUUID] = serviceConfig;
+    this.bluetoothServices[serviceUUID] = new BluetoothService(this.log, serviceConfig, this.prefix);
   }
 
+  this.homebridgeAccessory = null;
+  this.nobleAccessory = null;
+}
+
+
+BluetoothAccessory.prototype.connect = function (nobleAccessory, homebridgeAccessory) {
   this.log.info(this.prefix, "Connected | " + this.name + " - " + this.address);
-};
-
-
-BluetoothAccessory.prototype.setup = function (nobleAccessory, parentBluetoothPlatform) {
-  this.homebridgeAccessory = new Accessory(this.name, UUIDGen.generate(this.name));
+  this.homebridgeAccessory = homebridgeAccessory;
+  this.homebridgeAccessory.on('identify', this.identify.bind(this));
   this.homebridgeAccessory.updateReachability(true);
-  this.bluetoothPlatform = parentBluetoothPlatform;
-  this.bluetoothPlatform.homebridgeAPI.registerPlatformAccessories("homebridge-bluetooth", "Bluetooth", [this.homebridgeAccessory]);
 
   this.nobleAccessory = nobleAccessory;
+  this.nobleAccessory.on('disconnect', this.disconnect.bind(this));
   this.nobleAccessory.discoverServices([], this.discoverServices.bind(this));
 };
 
@@ -67,12 +63,17 @@ BluetoothAccessory.prototype.discoverServices = function (error, nobleServices) 
 
   for (var nobleService of nobleServices) {
     var serviceUUID = trimUUID(nobleService.uuid);
-    var serviceConfig = this.serviceConfigs[serviceUUID];
-    if (!serviceConfig) {
+    var bluetoothService = this.bluetoothServices[serviceUUID];
+    if (!bluetoothService) {
       this.log.info(this.prefix, "Ignored | Service - " + nobleService.uuid);
       continue;
     }
-    this.bluetoothServices[serviceUUID] = new BluetoothService(this.log, serviceConfig, nobleService, this);
+
+    var homebridgeService = this.homebridgeAccessory.getService(bluetoothService.class);
+    if (!homebridgeService) {
+      homebridgeService = this.homebridgeAccessory.addService(bluetoothService.class, bluetoothService.name);
+    }
+    bluetoothService.connect(nobleService, homebridgeService);
   }
 };
 
@@ -92,17 +93,22 @@ BluetoothAccessory.prototype.identify = function (paired, callback) {
 };
 
 
-BluetoothAccessory.prototype.disconnect = function () {
+BluetoothAccessory.prototype.disconnect = function (error) {
+  if (error) {
+    this.log.error("Disconnecting failed | " + this.name + " - " + this.address + " | " + error);
+  }
+
   for (var serviceUUID in this.bluetoothServices) {
     this.bluetoothServices[serviceUUID].disconnect();
   }
-  this.homebridgeAccessory.removeAllListeners('identify');
-  this.homebridgeAccessory.updateReachability(false);
-  this.bluetoothPlatform.homebridgeAPI.unregisterPlatformAccessories("homebridge-bluetooth", "Bluetooth", [this.homebridgeAccessory]);
-
-  this.nobleAccessory = null;
-  this.homebridgeAccessory = null;
-  this.log.info(this.prefix, "Disconnected");
+  if (this.nobleAccessory && this.homebridgeAccessory) {
+    this.homebridgeAccessory.removeAllListeners('identify');
+    this.homebridgeAccessory.updateReachability(false);
+    this.nobleAccessory.removeAllListeners('disconnect');
+    this.homebridgeAccessory = null;
+    this.nobleAccessory = null;
+    this.log.info(this.prefix, "Disconnected");
+  }
 };
 
 

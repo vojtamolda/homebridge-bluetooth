@@ -9,25 +9,23 @@ module.exports = function (service, bluetoothCharacteristic) {
 };
 
 
-function BluetoothService(log, config, nobleService, parentBluetoothAccessory) {
+function BluetoothService(log, config, prefix) {
   this.log = log;
 
-  this.init(config, parentBluetoothAccessory);
-  this.setup(nobleService, parentBluetoothAccessory);
-}
-
-
-BluetoothService.prototype.init = function (config, parentBluetoothAccessory) {
   if (!config.name) {
     throw new Error("Missing mandatory config 'name'");
   }
   this.name = config.name;
-  this.prefix = parentBluetoothAccessory.prefix + " " + Chalk.magenta("[" + this.name + "]");
+  this.prefix = prefix + " " + Chalk.magenta("[" + this.name + "]");
 
   if (!config.type) {
     throw new Error(this.prefix + " Missing mandatory config 'type'");
   }
   this.type = config.type;
+  if (!Service[this.type]) {
+    throw new Error(this.prefix + " Service type '" + this.type + "' is not defined. See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
+  }
+  this.class = Service[this.type]; // For example - Service.Lightbulb
 
   if (!config.UUID) {
     throw new Error(this.prefix + " Missing mandatory config 'UUID'");
@@ -37,23 +35,22 @@ BluetoothService.prototype.init = function (config, parentBluetoothAccessory) {
   if (!config.characteristics || !(config.characteristics instanceof Array)) {
     throw new Error(this.prefix + " Missing mandatory config 'characteristics'");
   }
-  this.characteristicConfigs = {};
+
+  this.log.info(this.prefix, "Initialized | Service." + this.type + " - " + this.UUID);
   this.bluetoothCharacteristics = {};
   for (var characteristicConfig of config.characteristics) {
     var characteristicUUID = trimUUID(characteristicConfig.UUID);
-    this.characteristicConfigs[characteristicUUID] = characteristicConfig;
+    this.bluetoothCharacteristics[characteristicUUID] = new BluetoothCharacteristic(this.log, characteristicConfig, this.prefix);
   }
 
-  this.log.info(this.prefix, "Initialized | Service." + this.type + " - " + this.UUID);
-};
+  this.homebridgeService = null;
+  this.nobleService = null;
+}
 
 
-BluetoothService.prototype.setup = function (nobleService, parentBluetoothAccessory) {
-  var serviceType = Service[this.type]; // For example - Service.Lightbulb
-  if (!serviceType) {
-    throw new Error(this.prefix + " Service type '" + this.type + "' is not defined. See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
-  }
-  this.homebridgeService = parentBluetoothAccessory.homebridgeAccessory.addService(serviceType, this.name);
+BluetoothService.prototype.connect = function (nobleService, homebridgeService) {
+  this.log.info(this.prefix, "Connected | Service." + this.type + " - " + this.UUID);
+  this.homebridgeService = homebridgeService;
 
   this.nobleService = nobleService;
   this.nobleService.discoverCharacteristics([], this.discoverCharacteristics.bind(this));
@@ -72,12 +69,14 @@ BluetoothService.prototype.discoverCharacteristics = function (error, nobleChara
 
   for (var nobleCharacteristic of nobleCharacteristics) {
     var characteristicUUID = trimUUID(nobleCharacteristic.uuid);
-    var characteristicConfig = this.characteristicConfigs[characteristicUUID];
-    if (!characteristicConfig) {
+    var bluetoothCharacteristic = this.bluetoothCharacteristics[characteristicUUID];
+    if (!bluetoothCharacteristic) {
       this.log.info(this.prefix, "Ignored | Characteristic - " + nobleCharacteristic.uuid);
       continue;
     }
-    this.bluetoothCharacteristics[characteristicUUID] = new BluetoothCharacteristic(this.log, characteristicConfig, nobleCharacteristic, this);
+
+    var homebridgeCharacteristic = this.homebridgeService.getCharacteristic(bluetoothCharacteristic.class);
+    bluetoothCharacteristic.connect(nobleCharacteristic, homebridgeCharacteristic);
   }
 };
 
@@ -86,10 +85,11 @@ BluetoothService.prototype.disconnect = function () {
   for (var characteristicUUID in this.bluetoothCharacteristics) {
     this.bluetoothCharacteristics[characteristicUUID].disconnect();
   }
-
-  this.nobleService = null;
-  this.homebridgeService = null;
-  this.log.info(this.prefix, "Disconnected");
+  if (this.nobleCharacteristic && this.homebridgeCharacteristic) {
+    this.homebridgeService = null;
+    this.nobleService = null;
+    this.log.info(this.prefix, "Disconnected");
+  }
 };
 
 

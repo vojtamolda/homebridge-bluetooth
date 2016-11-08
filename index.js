@@ -11,8 +11,8 @@ module.exports = function (homebridge) {
 
   BluetoothCharacteristic = require("./source/characteristic.js")(Characteristic);
   BluetoothService = require("./source/service.js")(Service, BluetoothCharacteristic);
-  BluetoothAccessory = require("./source/accessory.js")(Accessory, BluetoothService, UUIDGen);
-  BluetoothPlatform = require("./source/platform.js")(Noble, BluetoothAccessory);
+  BluetoothAccessory = require("./source/accessory.js")(Accessory, BluetoothService);
+  BluetoothPlatform = require("./source/platform.js")(Noble, UUIDGen, Accessory, BluetoothAccessory);
 
   homebridge.registerPlatform("homebridge-bluetooth", "Bluetooth", BluetoothPlatform, true);
 };
