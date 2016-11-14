@@ -15,48 +15,18 @@ Homebridge runs on top of [Node.js](https://nodejs.org) server and is an open-so
 
 ## Installation
 
-### Prerequisites
-
-#### Linux (Debian Based, Kernel 3.6 or newer)
-A supported  BLE (Bluetooth 4.0) USB dongle is required, if your device doesn't have it built-in.
-
- - Install [Node.js](https://nodejs.org/en/download/)
-
-   [Node.js](https://nodejs.org) is an asynchronous event driven JavaScript server, ideal for building scalable, low-latency network applications. [Homebridge](https://www.npmjs.com/package/homebridge) is built on top of this server. It is being developed so quickly that package repositories of most distributions contain a very old version. Getting latest from the official website is recommended.
-
- - Install `libbluetooth-dev` and `libavahi-compat-libdnssd-dev`
-
-   These libraries and their dependencies are required by [Noble](https://www.npmjs.com/package/noble) package and provide access to the kernel Bluetooth subsystem.
-
-   ```bash
-   sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev libavahi-compat-libdnssd-dev
-   ```
-
-#### macOS (10.10 or newer)
-Check [this link](http://www.imore.com/how-tell-if-your-mac-has-bluetooth-40) to see if your mac has built-in BLE (Bluetooth 4.0) support. All macs from 2012 and newer are generally fine.
-
- - Install [Node.js](https://nodejs.org/en/download/)
-
-   [Node.js](https://nodejs.org) is an asynchronous event driven JavaScript server, ideal for building scalable, low-latency network applications. [Homebridge](https://www.npmjs.com/package/homebridge) is built on top of this server. It is being developed so quickly that package repositories of most distributions contain a very old version. Getting latest from the official website is recommended.
-
- - Install [XCode](https://itunes.apple.com/ca/app/xcode/id497799835?mt=12)
-
-   [XCode](https://developer.apple.com/xcode/) comes with a C compiler that is needed to compile the JavaScript to C bindings required by [Noble](https://www.npmjs.com/package/noble) package.
-
-#### Windows (8.1 or newer)
-Pull request is welcomed here... Both [Homebridge](https://www.npmjs.com/package/homebridge) and [Noble](https://www.npmjs.com/package/noble) should run on Windows, but I don't have a machine to test.
-
+Make sure your systems matches the [prerequisites](#what-are-the-prerequisites-for-installation). You need to have a C compiler, [Node.js](https://nodejs.org) server and if you're running on Linux the [`libbluez-dev`](http://www.bluez.org/download/) library.
 
 ### Install Homebridge & Noble
 [Homebridge](https://github.com/nfarina/homebridge) is a lightweight framework built on top of [Node.js](https://nodejs.org/) server that provides the HomeKit bridge for your Apple devices to connect to. [Noble](https://github.com/sandeepmistry/noble) is BLE central module library for [Node.js](https://nodejs.org/) that abstracts away intricacies of each OS BLE stack implementation and provides a nice universal high-level API.
 
-Depending on your privileges `-g` flag may need root permissions to install to the global `npm` module directory.
-```bash
+```sh
 [sudo] npm install -g noble
 [sudo] npm install -g --unsafe-perm homebridge node-gyp
 [sudo] npm install -g homebridge-bluetooth
 ```
 
+**Note** _Depending on your privileges `-g` flag may need root permissions to install to the global `npm` module directory._
 
 ### Configure Homebridge
 Homebridge is setup via `config.json` file sitting in the `~/.homebridge/` directory. The [example config](config.json) included in the repository has lots of comments and is a good starting point. Each BLE peripheral device is uniquely identified by it's address. Services and characteristics are identified by UUID. Also, each of the [examples](/examples/) comes with it's own `config.json` file.
@@ -109,18 +79,16 @@ The corresponding entry in the `config.json` file that connects to the character
 } ]
 ```
 
-Please not that all [UUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier) should be randomly generated to prevent collisions. [This page](https://www.uuidgenerator.net) is a good place to get your own.
-
-
+**Note** _All [UUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier) should be randomly generated to prevent collisions. [This page](https://www.uuidgenerator.net) is a good place to get your own._
 
 ### Run Homebridge
 Depending on your privileges, accessing the BLE kernel subsystem may need root permissions.
 
-```bash
+```sh
 [sudo] homebridge
 ```
 
-See [this section of Noble readme](https://github.com/sandeepmistry/noble#running-without-rootsudo) for more details about running without `sudo`.
+**Note** _See [this section of Noble readme](https://github.com/sandeepmistry/noble#running-without-rootsudo) for more details about running without `sudo`._
 
 
 
@@ -128,10 +96,25 @@ See [this section of Noble readme](https://github.com/sandeepmistry/noble#runnin
 
 If you encouter a different problem, please, open an [issue](https://github.com/vojtamolda/homebridge-bluetooth/issues).
 
+### Home app can't discover any nearby accessories
+Make sure the Apple device and the Homebridge server are on the same subnet and connected to the same wifi router.
+
+Sometimes, homebridge server might think that, it has successfully paired with iOS, but iOS doesn't agree. Try to delete the `persist/` directory in the `~/.homebridge/` configuration folder. This removes all pairings that normally persist from session to session.
+
+```sh
+rm -rf ~/.homebridge/persist/
+```
+
+From time to time it looks like iOS ignores HomeKit bridges with `username` that it has already paired with. Try to change the `username` in the `bridge` section of `config.json` to a new value never used before.
+
+```js
+"username": "CC:22:3D:E3:CE:30"  ->  "username": "DD:33:4E:F4:DF:41"
+```
+
 ### BLE peripheral is discovered, but immediately disconnects
 This isssue seems to be happening on some versions of Raspbian running on the Pi 3. Resetting the BLE adapter seems to resolve the issue:
 
-```bash
+```sh
 [sudo] hciconfig hci0 reset
 ```
 
@@ -159,7 +142,39 @@ BTW, I think it might be possible to re-write the BLE implementation above with 
 Implementing a HomeKit over BLE stack correctly requires access to [MFi](https://developer.apple.com/programs/mfi/) internal documentation, which isn't publicly available, unless you're a registered developer at a company with big $$$. Making BLE accessories is simple, but making them secure seems to be very, very hard.
 
 
-### On what devices was this library tested?
+### What are the prerequisites for installation?
+
+#### Linux (Debian Based, Kernel 3.6 or newer)
+A supported  BLE (Bluetooth 4.0) USB dongle is required, if your device doesn't have it built-in.
+
+ - Install [Node.js](https://nodejs.org/en/download/)
+
+   [Node.js](https://nodejs.org) is an asynchronous event driven JavaScript server, ideal for building scalable, low-latency network applications. [Homebridge](https://www.npmjs.com/package/homebridge) is built on top of this server. It is being developed so quickly that package repositories of most distributions contain a very old version. Getting latest from the official website is recommended.
+
+ - Install `libbluetooth-dev` and `libavahi-compat-libdnssd-dev`
+
+   These libraries and their dependencies are required by [Noble](https://www.npmjs.com/package/noble) package and provide access to the kernel Bluetooth subsystem.
+
+   ```sh
+   sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev libavahi-compat-libdnssd-dev
+   ```
+
+#### macOS (10.10 or newer)
+Check [this link](http://www.imore.com/how-tell-if-your-mac-has-bluetooth-40) to see if your mac has built-in BLE (Bluetooth 4.0) support. All macs from 2012 and newer are generally fine.
+
+ - Install [Node.js](https://nodejs.org/en/download/)
+
+   [Node.js](https://nodejs.org) is an asynchronous event driven JavaScript server, ideal for building scalable, low-latency network applications. [Homebridge](https://www.npmjs.com/package/homebridge) is built on top of this server. It is being developed so quickly that package repositories of most distributions contain a very old version. Getting latest from the official website is recommended.
+
+ - Install [XCode](https://itunes.apple.com/ca/app/xcode/id497799835?mt=12)
+
+   [XCode](https://developer.apple.com/xcode/) comes with a C compiler that is needed to compile the JavaScript to C bindings required by [Noble](https://www.npmjs.com/package/noble) package.
+
+#### Windows (8.1 or newer)
+Pull request is welcomed here... Both [Homebridge](https://www.npmjs.com/package/homebridge) and [Noble](https://www.npmjs.com/package/noble) should run on Windows, but I don't have a machine to test.
+
+
+### On what devices was this plugin tested?
 Here's a list of testing devices. The list is by no means exhaustive and the plugin will work with many more.
 - Apple Device
   - [iPhone](https://en.wikipedia.org/wiki/IPhone) 5S & 6 running [iOS](https://en.wikipedia.org/wiki/IOS) 10

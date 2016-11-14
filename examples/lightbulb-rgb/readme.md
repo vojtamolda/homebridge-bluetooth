@@ -16,17 +16,29 @@ Download and install the latest version of the [Arduino IDE](https://www.arduino
 ### Wiring
 Connect 3 LEDs to pins 9, 6 and 5. These pins support PWM and therefore can be programmed to dim the LEDs. Each LED needs to have a resistor to limit the current passing through - max current per I/O pin is 20 mA. Anything between 100 Ohms and 1k Ohms will do.
 
-The tactile switch is connected to pin 2 and when pushed connects the pin to ground. The skethch turns on an internal 10k Ohm pull-up resitor to prevent random switching.
+The tactile switch is connected to pin 2 and when pushed connects the pin to the ground. The sketch code activates the internal 10k Ohm pull-up resitor to keep the pin high when the switch isn't pressed.
 
 <img src="arduino101/arduino101.jpg" width="30%">
 
 **Note** _Alternatively, you can use any of the many BLE boards available on the market ([BlueBean](https://punchthrough.com/bean/), [RedBearLabs BLE Nano](http://redbearlab.com/blenano), ...) as long as you keep UUIDs of the services and characteristics in sync with your `config.json` file, everything will work just fine._
 
 ### Running the Sketch
-Compile, run and upload the [arduino101.ino sketch](arduino101/arduino101.ino) using the [Arduino IDE](https://www.arduino.cc/en/Main/Software). 
-The sketch creates a BLE service with 4 characteristics. There's one characteristic for on/off characteristic (type `BOOL`), two for hue & saturation (type `FLOAT`) and last one for brightness (type `INT`). All charactersitis have read, write and notify permissions. Take a look into [this file](https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js#L1146) to see the definition.
+Compile, run and upload the [arduino101.ino sketch](arduino101/arduino101.ino) using the [Arduino IDE](https://www.arduino.cc/en/Main/Software).
+The sketch creates a BLE service with 4 characteristics. There's one characteristic for on/off characteristic (type `BOOL`), two for hue & saturation (type `FLOAT`) and the fourth one for brightness (type `INT`). All charactersitis have read, write and notify permissions.
 
-Once the BLE central device is setup, it connects to this characteristic and exposes it via Homebridge as a HomeKit lightbulb accessory. The sketch also contains some logic to convert HSV colors to RGB values for each LED.
+```cpp
+BLEService lightbulbService("57E54BF0-8574-47BE-9C1D-A0DBFC8FA183");
+BLECharCharacteristic onCharacteristic("57E54BF1-8574-47BE-9C1D-A0DBFC8FA183", BLERead | BLEWrite | BLENotify);
+BLEFloatCharacteristic hueCharacteristic("57E54BF2-8574-47BE-9C1D-A0DBFC8FA183", BLERead | BLEWrite | BLENotify);
+BLEFloatCharacteristic saturationCharacteristic("57E54BF3-8574-47BE-9C1D-A0DBFC8FA183", BLERead | BLEWrite | BLENotify);
+BLEIntCharacteristic brightnessCharacteristic("57E54BF4-8574-47BE-9C1D-A0DBFC8FA183", BLERead | BLEWrite | BLENotify);
+```
+
+When the tactile switch is toggled the LEDs turn on (or turn off if they were on) and the BLE subscribe-notification mechanism cases the an update update on the Homebridge. This way the information about switching propagates through callbacks to the Apple device without any polling.
+
+Take a look into [this file](https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js#L1147) to see the full definition of the _Lightbulb_ service.
+
+Once the BLE central device is setup, it connects to this characteristic and exposes it via Homebridge as a HomeKit accessory of type _Lightbulb_. The sketch also contains some logic to convert HSV colors to RGB values for each LED.
 
 Leave the device powered on and the sketch running while you setup the Homebridge server. The sketch has some built-in logging, so keeping the Serial monitor open may be helpful for debugging.
 
@@ -45,32 +57,32 @@ No wiring except for the micro-USB cable providing power is needed. The Pi needs
 ### Running Homebridge
 Running Homebridge on a Raspberry Pi is straightforward. Follow [this guide](https://github.com/nfarina/homebridge/wiki/Running-HomeBridge-on-a-Raspberry-Pi) to install Homebridge server and then run the following command to install the homebridge-bluetooth plugin:
 
-```bash
+```sh
 [sudo] npm install -g homebridge-bluetooth
 ```
 
 Edit the `~/.homebridge/config.json`, name your Homebridge server and add a new accessory to allow the plugin to connect to the BLE service running on the Arduino:
 
-```json
+```js
 "name": "Arduino",
 "address": "01:23:45:67:89:AB",
 "services": [ {
-  "name": "RGB LED",
-  "type": "Lightbulb",
-  "UUID": "57E54BF0-8574-47BE-9C1D-A0DBFC8FA183",
-  "characteristics": [ {
-      "type": "On",
-      "UUID": "57E54BF1-8574-47BE-9C1D-A0DBFC8FA183"
-    }, {
-      "type": "Brightness",
-      "UUID": "57E54BF2-8574-47BE-9C1D-A0DBFC8FA183"
-    }, {
-      "type": "Saturation",
-      "UUID": "857E54BF3-8574-47BE-9C1D-A0DBFC8FA183"
-    }, {
-      "type": "Hue",
-      "UUID": "857E54BF4-8574-47BE-9C1D-A0DBFC8FA183"
-    } ]
+    "name": "RGB LED",
+    "type": "Lightbulb",
+    "UUID": "57E54BF0-8574-47BE-9C1D-A0DBFC8FA183",
+    "characteristics": [ {
+            "type": "On",
+            "UUID": "57E54BF1-8574-47BE-9C1D-A0DBFC8FA183"
+        }, {
+            "type": "Brightness",
+            "UUID": "57E54BF2-8574-47BE-9C1D-A0DBFC8FA183"
+        }, {
+            "type": "Saturation",
+            "UUID": "857E54BF3-8574-47BE-9C1D-A0DBFC8FA183"
+          }, {
+            "type": "Hue",
+            "UUID": "857E54BF4-8574-47BE-9C1D-A0DBFC8FA183"
+      } ]
 } ]
 ```
 
@@ -91,7 +103,7 @@ Finally, start the Homebridge server. If you use Linux you may need to run with 
 Open Home app and tap the '+' button to add new accessory. When you attempt to add the 'Raspberry Pi 3' bridge, it will ask for a "PIN" from the `config.json` file. Once you are paired with your new Rapsberry Homebridge server all the Arduino accesory can be added the same way as the bridge.
 
 ### Interacting
-Once your BLE accessory has been added to HomeKit database, besides using the Home app or Control Center at the bottom of the screen, you should be able to tell Siri to control any HomeKit accessory. Try `Hey Siri, Dim RGB LED to 50%`. However, Siri is a cloud service and iOS may need some time to synchronize your HomeKit database to iCloud.
+Once your BLE accessory has been added to HomeKit database, besides using the Home app or Control Center at the bottom of the screen, you should be able to tell Siri to control any HomeKit accessory. Try _"Hey Siri, dim RGB LED to 50%"_. However, Siri is a cloud service and iOS may need some time to synchronize your HomeKit database to iCloud.
 
 <img src="images/ios-accesories.png" width="30%">
 <img src="images/ios-brightness.png" width="30%">

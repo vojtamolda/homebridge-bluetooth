@@ -13,17 +13,22 @@ This example uses [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) 
 
 Download and install the latest version of the [Arduino IDE](https://www.arduino.cc/en/Main/Software). If you're totally new to microcontrollers take some time to go through an introductory tutorial and learn how to make a LED blink. This will help you to understand how to use the IDE, how to upload a sketch and what is the code actually doing.
 
-
 ### Wiring
-Connect the LED to pin 13. The LED has to have a resistor in series to limit the current passing through - max current per I/O pin is 20 mA. Generally, anything between 100 and 1k Ohms will do.
+Connect the LED to pin 13. The LED has to have a resistor in series to limit the current passing through - max current per I/O pin is 20 mA. Generally, anything between 100 and 1k Ohms will do. If you're lazy you can also skip the wiring and use the onboard LED connected to pin 13.
 
 <img src="arduino101/arduino101.jpg" width="30%">
 
 **Note** _Alternatively, you can use any of the many BLE boards available on the market ([BlueBean](https://punchthrough.com/bean/), [RedBearLabs BLE Nano](http://redbearlab.com/blenano), ...) as long as you keep UUIDs of the services and characteristics in sync with your `config.json` file, everything will work just fine._
 
-
 ### Running the Sketch
-Compile, run and upload the [arduino101.ino sketch](arduino101/arduino101.ino) using the [Arduino IDE](https://www.arduino.cc/en/Main/Software). The sketch creates a BLE service with a readable, writable and notifiable characteristic for on/off state. Take a look into [this file](https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js#L1146) to see the definition. Once the BLE central device is setup, it connects to this characteristic and exposes it via Homebridge as a HomeKit lightbulb accessory.
+Compile, run and upload the [arduino101.ino sketch](arduino101/arduino101.ino) using the [Arduino IDE](https://www.arduino.cc/en/Main/Software). The sketch creates a BLE service with a readable, writable and notifiable characteristic for on/off state.
+
+```cpp
+BLEService lightbulbService("8E76F000-690E-472E-88C3-051277686A73");
+BLECharCharacteristic onCharacteristic("8E76F001-690E-472E-88C3-051277686A73", BLEWrite | BLERead | BLENotify);
+```
+
+Take a look into [this file](https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js#L1147) to see the full definition of the _On_ characteristic used in the _Lightbulb_ service. Once the BLE central device is setup, it connects to this characteristic and exposes it via Homebridge as a HomeKit accessory of type _Lightbulb_.
 
 Leave the device powered on and the sketch running while you setup the Homebridge server. The sketch has some built-in logging, so keeping the Serial monitor open may be helpful for debugging.
 
@@ -31,7 +36,6 @@ Leave the device powered on and the sketch running while you setup the Homebridg
 ## BLE Central & Homebridge Server (Raspberry Pi 3 or Other Compatible Box)
 
 For help installing an operating system on your new Pi, the official documentation contains a couple of [nice videos](https://www.raspberrypi.org/help/videos/).
-
 
 ### Wiring
 No wiring except for the micro-USB cable providing power is needed. The Pi needs to be connected to the same router (subnet) as the Apple device you plan to use. It doesn't matter whether via Wifi or Ethernet. Otherwise, you won't be able discover and connect to the Homebridge server running on the Pi.
@@ -43,7 +47,7 @@ No wiring except for the micro-USB cable providing power is needed. The Pi needs
 ### Running Homebridge
 Running Homebridge on a Raspberry Pi is straightforward. Follow [this guide](https://github.com/nfarina/homebridge/wiki/Running-HomeBridge-on-a-Raspberry-Pi) to install Homebridge server and then run the following command to install the homebridge-bluetooth plugin:
 
-```bash
+```sh
 [sudo] npm install -g homebridge-bluetooth
 ```
 
@@ -65,7 +69,7 @@ Edit the `~/.homebridge/config.json`, name your Homebridge server and add a new 
 
 Finally, start the Homebridge server. If you use Linux you may need to run with higher privileges in order to have access to the BLE hardware layer. See [this link](https://github.com/sandeepmistry/noble#running-without-rootsudo) for more details about running without `sudo`.
 
-```
+```sh
 [sudo] homebridge
 ```
 
@@ -80,7 +84,7 @@ Finally, start the Homebridge server. If you use Linux you may need to run with 
 Open Home app and tap the '+' button to add new accessory. When you attempt to add the 'Raspberry Pi 3' bridge, it will ask for a "PIN" from the `config.json` file. Once you are paired with your new Rapsberry, Homebridge server all the connected BLE accesories can be added the same way as the bridge.
 
 ### Interacting
-Once your BLE accessory has been added to HomeKit database, besides using the Home app or Control Center at the bottom of the screen, you should be able to tell Siri to control any HomeKit accessory. Try `Hey Siri, Turn on LED`. However, Siri is a cloud service and iOS may need some time to synchronize your HomeKit database to iCloud.
+Once your BLE accessory has been added to HomeKit database, besides using the Home app or Control Center at the bottom of the screen, you should be able to tell Siri to control any HomeKit accessory. Try _"Hey Siri, turn on LED"_. However, Siri is a cloud service and iOS may need some time to synchronize your HomeKit database to iCloud.
 
 <img src="images/ios-home.png" width="30%">
 <img src="images/ios-on.png" width="30%">
