@@ -19,3 +19,10 @@ Turn an LED connected to a BLE capable microprocessor into a wireless HomeKit li
 <img src="lightbulb-rgb/images/lightbulb-rgb.jpg" width="50%">
 
 Turn three LEDs connected to a BLE capable microprocessor into a wireless HomeKit lightbulb. Use the Home app or Siri on your Apple device to switch it on and change it's brightness or color. BLE subscribe capability allows the microprocessor to sent events back to the HomeKit whenever an external event changes the state of the light.
+
+
+## Thermometer Accessory [`thermometer/`](thermometer)
+
+<img src="thermometer/images/thermometer.jpg" width="50%">
+
+Turn a BLE capable microprocessor into a wireless HomeKit thermometer. Temperature reading can be displayed in the Home app on your Apple device.
