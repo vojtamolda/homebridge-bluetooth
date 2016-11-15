@@ -7,6 +7,13 @@ Here's couple of example how to use this plugin. Each example also contains sket
 <img src="../images/examples.jpg">
 
 
+## Switch Accessory [`switch/`](switch)
+
+<img src="switch/images/switch.jpg" width="50%">
+
+Turn a tactile push button connected to a BLE capable microprocessor into a wireless HomeKit switch. Use the Home app or Siri on your Apple device to trigger events based on the switch state.
+
+
 ## Lightbulb Accessory [`lightbulb/`](lightbulb)
 
 <img src="lightbulb/images/lightbulb.jpg" width="50%">
