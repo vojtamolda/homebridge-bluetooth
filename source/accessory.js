@@ -34,6 +34,21 @@ function BluetoothAccessory(log, config) {
     this.bluetoothServices[serviceUUID] = new BluetoothService(this.log, serviceConfig, this.prefix);
   }
 
+  var informationServiceUUID = trimUUID('180A')
+  if (!(informationServiceUUID in this.bluetoothServices)) {
+    informationServiceConfig = {
+      "name": "Information",
+      "type": "AccessoryInformation",
+      "UUID": "180A",
+      "characteristics": [
+        {"type": "Manufacturer", "UUID": "2A29"},
+        {"type": "Model", "UUID": "2A24"},
+        {"type": "SerialNumber", "UUID": "2A25"}
+      ]
+    };
+    this.bluetoothServices[informationServiceUUID] = new BluetoothService(this.log, informationServiceConfig, this.prefix);
+  }
+
   this.homebridgeAccessory = null;
   this.nobleAccessory = null;
 }
