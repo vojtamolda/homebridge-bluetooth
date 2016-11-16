@@ -5,6 +5,11 @@ const int pinLED = 13;
 
 
 BLEPeripheral ble;
+BLEService informationService("180A");
+BLECharacteristic modelCharacteristic("2A24", BLERead, "101");
+BLECharacteristic manufacturerCharacteristic("2A29", BLERead, "Arduino");
+BLECharacteristic serialNumberCharacteristic("2A25", BLERead, "2.71828");
+
 BLEService lightbulbService("8E76F000-690E-472E-88C3-051277686A73");
 BLECharCharacteristic onCharacteristic("8E76F001-690E-472E-88C3-051277686A73", BLEWrite | BLERead | BLENotify);
 
@@ -15,6 +20,10 @@ void setup() {
 
   ble.setLocalName("Light");
   ble.setAdvertisedServiceUuid(lightbulbService.uuid());
+  ble.addAttribute(informationService);
+  ble.addAttribute(modelCharacteristic);
+  ble.addAttribute(manufacturerCharacteristic);
+  ble.addAttribute(serialNumberCharacteristic);
 
   ble.addAttribute(lightbulbService);
   ble.addAttribute(onCharacteristic);

@@ -9,6 +9,11 @@ const int pinSwitch = 2;
 
 
 BLEPeripheral ble;
+BLEService informationService("180A");
+BLECharacteristic modelCharacteristic("2A24", BLERead, "101");
+BLECharacteristic manufacturerCharacteristic("2A29", BLERead, "Arduino");
+BLECharacteristic serialNumberCharacteristic("2A25", BLERead, "2.71828");
+
 BLEService lightbulbService("57E54BF0-8574-47BE-9C1D-A0DBFC8FA183");
 BLECharCharacteristic onCharacteristic("57E54BF1-8574-47BE-9C1D-A0DBFC8FA183", BLERead | BLEWrite | BLENotify);
 BLEFloatCharacteristic hueCharacteristic("57E54BF2-8574-47BE-9C1D-A0DBFC8FA183", BLERead | BLEWrite | BLENotify);
@@ -26,6 +31,10 @@ void setup() {
 
   ble.setLocalName("Light");
   ble.setAdvertisedServiceUuid(lightbulbService.uuid());
+  ble.addAttribute(informationService);
+  ble.addAttribute(modelCharacteristic);
+  ble.addAttribute(manufacturerCharacteristic);
+  ble.addAttribute(serialNumberCharacteristic);
 
   ble.addAttribute(lightbulbService);
   ble.addAttribute(onCharacteristic);

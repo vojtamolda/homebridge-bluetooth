@@ -4,6 +4,11 @@
 
 
 BLEPeripheral ble;
+BLEService informationService("180A");
+BLECharacteristic modelCharacteristic("2A24", BLERead, "101");
+BLECharacteristic manufacturerCharacteristic("2A29", BLERead, "Arduino");
+BLECharacteristic serialNumberCharacteristic("2A25", BLERead, "2.71828");
+
 BLEService thermometerService("1D8A68E0-E68E-4FED-943E-369099F5B499");
 BLEFloatCharacteristic temperatureCharacteristic("1D8A68E1-E68E-4FED-943E-369099F5B499", BLERead | BLENotify);
 
@@ -13,6 +18,10 @@ void setup() {
 
   ble.setLocalName("Thermo");
   ble.setAdvertisedServiceUuid(thermometerService.uuid());
+  ble.addAttribute(informationService);
+  ble.addAttribute(modelCharacteristic);
+  ble.addAttribute(manufacturerCharacteristic);
+  ble.addAttribute(serialNumberCharacteristic);
 
   ble.addAttribute(thermometerService);
   ble.addAttribute(temperatureCharacteristic);

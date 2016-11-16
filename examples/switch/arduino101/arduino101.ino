@@ -5,6 +5,11 @@ const int pinSwitch = 2;
 
 
 BLEPeripheral ble;
+BLEService informationService("180A");
+BLECharacteristic modelCharacteristic("2A24", BLERead, "101");
+BLECharacteristic manufacturerCharacteristic("2A29", BLERead, "Arduino");
+BLECharacteristic serialNumberCharacteristic("2A25", BLERead, "2.71828");
+
 BLEService switchService("5ECEC5A0-7F71-41DA-9B8C-6252FE7EFB7E");
 BLECharCharacteristic onCharacteristic("5ECEC5A1-7F71-41DA-9B8C-6252FE7EFB7E", BLEWrite | BLERead | BLENotify);
 bool lastSwitch = HIGH;
@@ -16,6 +21,15 @@ void setup() {
 
   ble.setLocalName("Switch");
   ble.setAdvertisedServiceUuid(switchService.uuid());
+  ble.addAttribute(informationService);
+  ble.addAttribute(modelCharacteristic);
+  ble.addAttribute(manufacturerCharacteristic);
+  ble.addAttribute(serialNumberCharacteristic);
+
+  ble.addAttribute(informationService);
+  ble.addAttribute(modelCharacteristic);
+  ble.addAttribute(manufacturerCharacteristic);
+  ble.addAttribute(serialNumberCharacteristic);
 
   ble.addAttribute(switchService);
   ble.addAttribute(onCharacteristic);
