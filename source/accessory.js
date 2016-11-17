@@ -65,7 +65,9 @@ BluetoothAccessory.prototype.discoverServices = function (error, nobleServices) 
     var serviceUUID = trimUUID(nobleService.uuid);
     var bluetoothService = this.bluetoothServices[serviceUUID];
     if (!bluetoothService) {
-      this.log.info(this.prefix, "Ignored | Service - " + nobleService.uuid);
+      if (nobleService.uuid != '1800' && nobleService.uuid != '1801') {
+        this.log.info(this.prefix, "Ignored | Service - " + nobleService.uuid);
+      }
       continue;
     }
 
