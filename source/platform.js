@@ -85,7 +85,7 @@ BluetoothPlatform.prototype.connect = function (error, nobleAccessory) {
   var bluetoothAccessory = this.bluetoothAccessories[accessoryAddress];
   var homebridgeAccessory = this.cachedHomebridgeAccessories[accessoryAddress];
   if (!homebridgeAccessory) {
-    homebridgeAccessory = new this.homebridgeAPI.platformAccessory(bluetoothAccessory.name, UUIDGen.generate(bluetoothAccessory.name));
+    homebridgeAccessory = new Accessory(bluetoothAccessory.name, UUIDGen.generate(bluetoothAccessory.name));
     homebridgeAccessory.context['address'] = accessoryAddress;
     this.homebridgeAPI.registerPlatformAccessories("homebridge-bluetooth", "Bluetooth", [homebridgeAccessory]);
   } else {

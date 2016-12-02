@@ -96,16 +96,7 @@ BluetoothAccessory.prototype.discoverServices = function (error, nobleServices) 
 
 
 BluetoothAccessory.prototype.identify = function (paired, callback) {
-  this.log.info(this.prefix, "Identify | " + paired);
-  /*  if (this.nobleAccessory) {
-   this.alertCharacteristic.write(new Buffer([0x02]), true);
-   setTimeout(function() {
-   this.alertCharacteristic.write(new Buffer([0x00]), true);
-   }.bind(this), 250);
-   callback();
-   } else {
-   callback(new Error("not connected"));
-   } */
+  this.log.info(this.prefix, "Identify");
   callback();
 };
 

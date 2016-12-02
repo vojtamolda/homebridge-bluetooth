@@ -97,7 +97,7 @@ BluetoothCharacteristic.prototype.notify = function (buffer, notification) {
   if (notification) {
     var value = this.fromBuffer(buffer);
     this.log.info(this.prefix, "Notify | " + value);
-    this.homebridgeCharacteristic.updateValue(value, null, null);
+    this.homebridgeCharacteristic.updateValue(value, null, this);
   }
 };
 
