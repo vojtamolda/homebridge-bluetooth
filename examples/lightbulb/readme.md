@@ -16,7 +16,7 @@ Download and install the latest version of the [Arduino IDE](https://www.arduino
 ### Wiring
 Connect the LED to pin 13. The LED has to have a resistor in series to limit the current passing through - max current per I/O pin is 20 mA. Generally, anything between 100 and 1k Ohms will do. If you're lazy you can also skip the wiring and use the onboard LED connected to pin 13.
 
-<img src="arduino101/arduino101.jpg" width="30%">
+<img src="arduino101/arduino101.png" width="30%">
 
 **Note** _Alternatively, you can use any of the many BLE boards available on the market ([BlueBean](https://punchthrough.com/bean/), [RedBearLabs BLE Nano](http://redbearlab.com/blenano), ...) as long as you keep UUIDs of the services and characteristics in sync with your `config.json` file, everything will work just fine._
 
@@ -40,7 +40,7 @@ For help installing an operating system on your new Pi, the official documentati
 ### Wiring
 No wiring except for the micro-USB cable providing power is needed. The Pi needs to be connected to the same router (subnet) as the Apple device you plan to use. It doesn't matter whether via Wifi or Ethernet. Otherwise, you won't be able discover and connect to the Homebridge server running on the Pi.
 
-<img src="images/raspberry.jpg" width="30%">
+<img src="images/raspberry.png" width="30%">
 
 **Note** _Alternatively, you can use a Raspberry Pi 2 with a supported USB BLE dongle instead of the Pi 3._
 
