@@ -6,22 +6,24 @@ Turn a BLE capable microprocessor into a wireless HomeKit thermometer. Temperatu
 
 <img src="images/thermometer.jpg">
 
-This example uses [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) and [Raspberry Pi 3](https://www.raspberrypi.org/). Generally, any programmable BLE peripheral and a box capable of running [Node.js](https://nodejs.org) with [Noble](https://github.com/sandeepmistry/noble) will work.
+This example uses [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) or [Bluefruit Micro LE](https://www.adafruit.com/products/2661) and [Raspberry Pi 3](https://www.raspberrypi.org/). Generally, any programmable BLE peripheral and a box capable of running [Node.js](https://nodejs.org) with [Noble](https://github.com/sandeepmistry/noble) will work.
 
 
-## BLE Accessory (Arduino 101 or Other BLE Board)
+## BLE Accessory (Arduino 101, Bluefruit Micro LE or Other BLE Board)
 
 Download and install the latest version of the [Arduino IDE](https://www.arduino.cc/en/Main/Software). If you're totally new to microcontrollers take some time to go through an introductory tutorial and learn how to make a LED blink. This will help you to understand how to use the IDE, how to upload a sketch and what is the code actually doing.
 
 ### Wiring
-No wiring is needed, since we use the internal thermometer attached to the IMU.
+No wiring is needed, since we use the internal thermometer attached to the IMU or a thermometer inside of the nRF51 chip die in case of the Bluefruit Micro LE.
 
 <img src="arduino101/arduino101.png" width="30%">
+<img src="bluefruit/bluefruit.png" width="30%">
+
 
 **Note** _Alternatively, you can use any of the many BLE boards available on the market ([BlueBean](https://punchthrough.com/bean/), [RedBearLabs BLE Nano](http://redbearlab.com/blenano), ...) as long as you keep UUIDs of the services and characteristics in sync with your `config.json` file, everything will work just fine._
 
 ### Running the Sketch
-Compile, run and upload the [arduino101.ino sketch](arduino101/arduino101.ino) using the [Arduino IDE](https://www.arduino.cc/en/Main/Software). The sketch creates a BLE service with a readable, writable and notifiable characteristic for on/off state.
+Compile, run and upload the [arduino101.ino](arduino101/arduino101.ino) or [bluefruit.ino](bluefruit/bluefruit.ino) sketch using the [Arduino IDE](https://www.arduino.cc/en/Main/Software). The sketch creates a BLE service with a readable and notifiable characteristic for the current temperature value state.
 
 ```cpp
 BLEService thermometerService("1D8A68E0-E68E-4FED-943E-369099F5B499");
@@ -54,8 +56,6 @@ Running Homebridge on a Raspberry Pi is straightforward. Follow [this guide](htt
 Edit the `~/.homebridge/config.json`, name your Homebridge server and add a new accessory to allow the plugin to connect to the BLE service running on the Arduino:
 
 ```js
-"name": "Arduino",
-"address": "01:23:45:67:89:AB",
 "name": "Arduino",
 "address": "01:23:45:67:89:AB",
 "services": [

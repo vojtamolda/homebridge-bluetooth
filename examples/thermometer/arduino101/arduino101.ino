@@ -40,7 +40,7 @@ void loop() {
 
   float currentCelsius = (float) CurieIMU.readTemperature() / 32767.0 + 23.0;
   float previousCelsius = temperatureCharacteristic.valueLE();
-  if (abs(currentCelsius - previousCelsius) > 0.05) {
+  if (abs(currentCelsius - previousCelsius) > 0.10) {
     temperatureCharacteristic.setValueLE(currentCelsius);
     Serial.print("Update temperature | ");
     Serial.println(currentCelsius);
