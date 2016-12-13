@@ -1,5 +1,5 @@
 
-# Lightbulb Accessory
+# Lightbulb
 
 
 Turn an LED connected to a BLE capable microprocessor into a wireless HomeKit lightbulb. Use the Home app or Siri on your Apple device to switch it on and off.
@@ -9,7 +9,7 @@ Turn an LED connected to a BLE capable microprocessor into a wireless HomeKit li
 This example uses [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) and [Raspberry Pi 3](https://www.raspberrypi.org/). Generally, any programmable BLE peripheral and a box capable of running [Node.js](https://nodejs.org) with [Noble](https://github.com/sandeepmistry/noble) will work.
 
 
-## BLE Accessory (Arduino 101 or Other BLE Board)
+## BLE Peripheral (Arduino 101 or Other BLE Board)
 
 Download and install the latest version of the [Arduino IDE](https://www.arduino.cc/en/Main/Software). If you're totally new to microcontrollers take some time to go through an introductory tutorial and learn how to make a LED blink. This will help you to understand how to use the IDE, how to upload a sketch and what is the code actually doing.
 
