@@ -66,12 +66,12 @@ BluetoothPlatform.prototype.discover = function (nobleAccessory) {
   var bluetoothAccessory = this.bluetoothAccessories[accessoryAddress];
   if (!bluetoothAccessory) {
     this.log.info("Ignored | " + nobleAccessory.advertisement.localName +
-                  " - " + nobleAccessory.address);
+                  " - " + nobleAccessory.address + " RSSI: " + nobleAccessory.rssi + "dB");
     return;
   }
 
   this.log.info("Discovered | " + nobleAccessory.advertisement.localName +
-                " - " + nobleAccessory.address);
+                " - " + nobleAccessory.address + " RSSI: " + nobleAccessory.rssi + "dB");
   nobleAccessory.connect(function (error) {
     this.connect(error, nobleAccessory)
   }.bind(this));
