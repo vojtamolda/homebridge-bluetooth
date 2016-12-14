@@ -1,0 +1,37 @@
+{
+  "bridge": {
+    "name": "Raspberry Pi 3",
+    "username": "CC:22:3D:E3:CE:30",
+    "port": 51826,
+    "pin": "314-15-926"
+  },
+  "description": "Raspberry Pi 3 Homebridge-Bluetooth RGB Lightbulb Example",
+  "platforms": [
+    {
+      "platform": "Bluetooth",
+      "accessories": [
+        {
+          "name": "Arduino",
+          "address": "01:23:45:67:89:AB",
+          "services": [
+            {
+              "name": "Lock",
+              "type": "LockMechanism",
+              "UUID": "43AAF900-5FF0-4633-95A2-FE4189EE103B",
+              "characteristics": [
+                {
+                  "type": "LockTargetState",
+                  "UUID": "43AAF901-5FF0-4633-95A2-FE4189EE103B"
+                },
+                {
+                  "type": "LockCurrentState",
+                  "UUID": "43AAF902-5FF0-4633-95A2-FE4189EE103B"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -27,6 +27,13 @@ Turn an LED connected to a BLE capable microprocessor into a wireless HomeKit li
 Turn three LEDs connected to a BLE capable microprocessor into a wireless HomeKit lightbulb. Use the Home app or Siri on your Apple device to switch it on and change it's brightness or color. BLE subscribe capability allows the microprocessor to sent events back to the HomeKit whenever an external event changes the state of the light.
 
 
+## Lock [`lock/`](lock)
+
+<img src="lock/images/lock.jpg" width="50%">
+
+Turn an old Lockitron V1 body connected to a BLE capable microprocessor into a wireless HomeKit lock. Use the Home app or Siri on your Apple device to secure and unsecure the lock.
+
+
 ## Switch [`switch/`](switch)
 
 <img src="switch/images/switch.jpg" width="50%">
