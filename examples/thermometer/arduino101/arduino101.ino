@@ -39,15 +39,18 @@ void loop() {
   ble.poll();
 
   float currentCelsius = (float) CurieIMU.readTemperature() / 32767.0 + 23.0;
+  static float averageCelsius = currentCelsius;
+  averageCelsius += (currentCelsius - averageCelsius) / 30.0;
   float previousCelsius = temperatureCharacteristic.valueLE();
-  if (abs(currentCelsius - previousCelsius) > 0.10) {
+  if (abs(averageCelsius - previousCelsius) > 0.50) {
     temperatureCharacteristic.setValueLE(currentCelsius);
     Serial.print("Update temperature | ");
-    Serial.println(currentCelsius);
+    Serial.println(averageCelsius, 2);
   } else {
     Serial.print("Temperature | ");
-    Serial.println(currentCelsius);
+    Serial.println(averageCelsius, 2);
   }
+
   delay(1000);
 }
 
@@ -61,4 +64,3 @@ void centralDisconnect(BLECentral& central) {
   Serial.print("Central disconnected | ");
   Serial.println(central.address());
 }
-

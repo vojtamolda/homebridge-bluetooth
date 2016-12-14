@@ -18,7 +18,7 @@ int32_t temperatureCharacteristic;
 
 union float_bytes {
   float value;
-  uint8_t bytes[sizeof(float)]; 
+  uint8_t bytes[sizeof(float)];
 };
 
 
@@ -41,7 +41,7 @@ void setup(void) {
   char serialNumber[] = "2.71828";
   serialNumberCharacteristic = gatt.addCharacteristic(0x2A25, GATT_CHARS_PROPERTIES_READ,
                                                sizeof(serialNumber), sizeof(serialNumber), BLE_DATATYPE_STRING);
-  gatt.setChar(serialNumberCharacteristic, serialNumber); 
+  gatt.setChar(serialNumberCharacteristic, serialNumber);
 
   uint8_t thermometerServiceUUID[] = {0x1D,0x8A,0x68,0xE0,0xE6,0x8E,0x4F,0xED,0x94,0x3E,0x36,0x90,0x99,0xF5,0xB4,0x99};
   thermometerService = gatt.addService(thermometerServiceUUID);
@@ -49,7 +49,7 @@ void setup(void) {
   temperatureCharacteristic = gatt.addCharacteristic(thermometerCharacteristicUUID,
                                                      GATT_CHARS_PROPERTIES_READ | GATT_CHARS_PROPERTIES_NOTIFY,
                                                      sizeof(float), sizeof(float), BLE_DATATYPE_BYTEARRAY);
-  
+
   ble.reset();
   ble.setConnectCallback(centralConnect);
   ble.setDisconnectCallback(centralDisconnect);
@@ -63,12 +63,12 @@ void loop(void) {
   static union float_bytes averageCelsius = { .value = 0.0 };
   if (ble.sendCommandCheckOK("AT+HWGETDIETEMP")) {
     float currentCelsius = atof(ble.buffer);
-    averageCelsius.value = averageCelsius.value + (currentCelsius - averageCelsius.value) / 30.0;
+    averageCelsius.value += (currentCelsius - averageCelsius.value) / 30.0;
   }
   union float_bytes previousCelsius = { .value = 0.0 };
   gatt.getChar(temperatureCharacteristic, previousCelsius.bytes, sizeof(previousCelsius));
-  
-  if (abs(averageCelsius.value - previousCelsius.value) > 0.10) {
+
+  if (abs(averageCelsius.value - previousCelsius.value) > 0.50) {
     gatt.setChar(temperatureCharacteristic, averageCelsius.bytes, sizeof(averageCelsius));
     Serial.print("Update temperature | ");
     Serial.println(averageCelsius.value);
@@ -76,6 +76,7 @@ void loop(void) {
     Serial.print("Temperature | ");
     Serial.println(averageCelsius.value);
   }
+
   delay(1000);
 }
 
@@ -92,4 +93,4 @@ void centralDisconnect(void) {
   if (ble.sendCommandCheckOK("AT+BLEGETPEERADDR")) {
     Serial.println(ble.buffer);
   }
-} 
+}

@@ -23,7 +23,7 @@ No wiring is needed, since we use the internal thermometer attached to the IMU o
 **Note** _Alternatively, you can use any of the many BLE boards available on the market ([BlueBean](https://punchthrough.com/bean/), [RedBearLabs BLE Nano](http://redbearlab.com/blenano), ...) as long as you keep UUIDs of the services and characteristics in sync with your `config.json` file, everything will work just fine._
 
 ### Running the Sketch
-Compile, run and upload the [arduino101.ino](arduino101/arduino101.ino) or [bluefruit.ino](bluefruit/bluefruit.ino) sketch using the [Arduino IDE](https://www.arduino.cc/en/Main/Software). The sketch creates a BLE service with a readable and notifiable characteristic for the current temperature value state.
+Compile, run and upload the [arduino101.ino](arduino101/arduino101.ino) or [bluefruit.ino](bluefruit/bluefruit.ino) sketch using the [Arduino IDE](https://www.arduino.cc/en/Main/Software). The sketch creates a BLE service with a readable and notifiable characteristic for the current temperature `float` value.
 
 ```cpp
 BLEService thermometerService("1D8A68E0-E68E-4FED-943E-369099F5B499");
@@ -31,6 +31,10 @@ BLEFloatCharacteristic temperatureCharacteristic("1D8A68E1-E68E-4FED-943E-369099
 ```
 
 Take a look into [this file](https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js#L1147) to see the full definition of the _CurrentTemperature_ characteristic used in the _TemperatureSensor_ service. Once the BLE central device is setup, it connects to this characteristic and exposes it via Homebridge as a HomeKit accessory of type _TemperatureSensor_.
+
+The code also calculates (pseudo-moving) average to prevent noise in the temperature measurement to trigger frequent mew value notifications. Duration of the averaging window is about 30 s. Once the moving average accumulates change above a certain threshold a new value of the characteristic is set which triggers the notify mechanism and propagates the measurement to HomeKit. The threshold is approximately half of the thermometer accuracy (±1°C).
+
+The built-ine sensor in fact measures is the temperature if the silicon die, which might be different from the room temperature (usually higher). The die temperature also depends on the load of the processor and might change even when the outside room temperature is stable.
 
 Leave the device powered on and the sketch running while you setup the Homebridge server. The sketch has some built-in logging, so keeping the Serial monitor open may be helpful for debugging.
 
