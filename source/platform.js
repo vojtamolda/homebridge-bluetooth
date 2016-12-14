@@ -97,11 +97,15 @@ BluetoothPlatform.prototype.connect = function (error, nobleAccessory) {
   } else {
     delete this.cachedHomebridgeAccessories[accessoryAddress];
   }
-  bluetoothAccessory.connect(nobleAccessory, homebridgeAccessory);
 
+  bluetoothAccessory.connect(nobleAccessory, homebridgeAccessory);
   nobleAccessory.on('disconnect', function (error) {
     this.disconnect(nobleAccessory, homebridgeAccessory, error);
   }.bind(this));
+
+  if (Object.keys(this.cachedHomebridgeAccessories).length > 0) {
+    Noble.startScanning([], false);
+  }
 };
 
 
