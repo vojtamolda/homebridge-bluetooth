@@ -17,7 +17,8 @@ function BluetoothCharacteristic(log, config, prefix) {
   this.type = config.type;
   this.prefix = prefix + " " + Chalk.green("[" + this.type + "]");
   if (!Characteristic[this.type]) {
-    throw new Error(this.prefix + " Characteristic type '" + this.type + "' is not defined. See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
+    throw new Error(this.prefix + " Characteristic type '" + this.type + "' is not defined. " +
+                    "See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
   }
   this.class = Characteristic[this.type]; // For example - Characteristic.Brightness
 
@@ -137,7 +138,8 @@ BluetoothCharacteristic.prototype.toBuffer = function (value) {
       buffer.writeUIntLE(value, 0, 8);
       break;
     default:
-      this.log.error(this.prefix, "Unsupported data conversion | " + this.homebridgeCharacteristic.props['format']);
+      this.log.error(this.prefix, "Unsupported data conversion | " +
+                     this.homebridgeCharacteristic.props['format']);
       buffer = Buffer.alloc(1);
       buffer.writeInt8(0, 0);
       break;
@@ -175,7 +177,8 @@ BluetoothCharacteristic.prototype.fromBuffer = function (buffer) {
       break;
     default:
       value = 0;
-      this.log.error(this.prefix, "Unsupported data conversion | " + this.homebridgeCharacteristic.props['format']);
+      this.log.error(this.prefix, "Unsupported data conversion | " +
+                     this.homebridgeCharacteristic.props['format']);
   }
   return value;
 };

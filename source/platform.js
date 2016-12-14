@@ -34,7 +34,8 @@ BluetoothPlatform.prototype.configureAccessory = function (homebridgeAccessory) 
   var bluetoothAccessory = this.bluetoothAccessories[accessoryAddress];
   if (!bluetoothAccessory) {
     this.log.info("Removed | " + homebridgeAccessory.name + " - " + accessoryAddress);
-    this.homebridgeAPI.unregisterPlatformAccessories("homebridge-bluetooth", "Bluetooth", [homebridgeAccessory]);
+    this.homebridgeAPI.unregisterPlatformAccessories("homebridge-bluetooth", "Bluetooth",
+                                                     [homebridgeAccessory]);
     return;
   }
 
@@ -64,11 +65,13 @@ BluetoothPlatform.prototype.discover = function (nobleAccessory) {
   var accessoryAddress = trimAddress(nobleAccessory.address);
   var bluetoothAccessory = this.bluetoothAccessories[accessoryAddress];
   if (!bluetoothAccessory) {
-    this.log.info("Ignored | " + nobleAccessory.advertisement.localName + " - " + nobleAccessory.address);
+    this.log.info("Ignored | " + nobleAccessory.advertisement.localName +
+                  " - " + nobleAccessory.address);
     return;
   }
 
-  this.log.info("Discovered | " + nobleAccessory.advertisement.localName + " - " + nobleAccessory.address);
+  this.log.info("Discovered | " + nobleAccessory.advertisement.localName +
+                " - " + nobleAccessory.address);
   nobleAccessory.connect(function (error) {
     this.connect(error, nobleAccessory)
   }.bind(this));
@@ -77,7 +80,8 @@ BluetoothPlatform.prototype.discover = function (nobleAccessory) {
 
 BluetoothPlatform.prototype.connect = function (error, nobleAccessory) {
   if (error) {
-    this.log.error("Connecting failed | " + nobleAccessory.advertisement.localName + " - " + nobleAccessory.address + " | " + error);
+    this.log.error("Connecting failed | " + nobleAccessory.advertisement.localName +
+                   " - " + nobleAccessory.address + " | " + error);
     return;
   }
 
@@ -85,9 +89,11 @@ BluetoothPlatform.prototype.connect = function (error, nobleAccessory) {
   var bluetoothAccessory = this.bluetoothAccessories[accessoryAddress];
   var homebridgeAccessory = this.cachedHomebridgeAccessories[accessoryAddress];
   if (!homebridgeAccessory) {
-    homebridgeAccessory = new Accessory(bluetoothAccessory.name, UUIDGen.generate(bluetoothAccessory.name));
+    homebridgeAccessory = new Accessory(bluetoothAccessory.name,
+                                        UUIDGen.generate(bluetoothAccessory.name));
     homebridgeAccessory.context['address'] = accessoryAddress;
-    this.homebridgeAPI.registerPlatformAccessories("homebridge-bluetooth", "Bluetooth", [homebridgeAccessory]);
+    this.homebridgeAPI.registerPlatformAccessories("homebridge-bluetooth", "Bluetooth",
+                                                   [homebridgeAccessory]);
   } else {
     delete this.cachedHomebridgeAccessories[accessoryAddress];
   }

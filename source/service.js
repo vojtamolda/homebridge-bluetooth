@@ -23,7 +23,8 @@ function BluetoothService(log, config, prefix) {
   }
   this.type = config.type;
   if (!Service[this.type]) {
-    throw new Error(this.prefix + " Service type '" + this.type + "' is not defined. See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
+    throw new Error(this.prefix + " Service type '" + this.type + "' is not defined. " +
+                    "See 'HAP-NodeJS/lib/gen/HomeKitType.js' for options.")
   }
   this.class = Service[this.type]; // For example - Service.Lightbulb
 
@@ -40,7 +41,8 @@ function BluetoothService(log, config, prefix) {
   this.bluetoothCharacteristics = {};
   for (var characteristicConfig of config.characteristics) {
     var characteristicUUID = trimUUID(characteristicConfig.UUID);
-    this.bluetoothCharacteristics[characteristicUUID] = new BluetoothCharacteristic(this.log, characteristicConfig, this.prefix);
+    this.bluetoothCharacteristics[characteristicUUID] =
+        new BluetoothCharacteristic(this.log, characteristicConfig, this.prefix);
   }
 
   this.homebridgeService = null;
@@ -75,7 +77,8 @@ BluetoothService.prototype.discoverCharacteristics = function (error, nobleChara
       continue;
     }
 
-    var homebridgeCharacteristic = this.homebridgeService.getCharacteristic(bluetoothCharacteristic.class);
+    var homebridgeCharacteristic =
+        this.homebridgeService.getCharacteristic(bluetoothCharacteristic.class);
     bluetoothCharacteristic.connect(nobleCharacteristic, homebridgeCharacteristic);
   }
 };

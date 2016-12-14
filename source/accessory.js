@@ -31,7 +31,8 @@ function BluetoothAccessory(log, config) {
   this.bluetoothServices = {};
   for (var serviceConfig of config.services) {
     var serviceUUID = trimUUID(serviceConfig.UUID);
-    this.bluetoothServices[serviceUUID] = new BluetoothService(this.log, serviceConfig, this.prefix);
+    this.bluetoothServices[serviceUUID] = new BluetoothService(this.log, serviceConfig,
+                                                               this.prefix);
   }
 
   var informationServiceUUID = trimUUID('180A')
@@ -46,7 +47,8 @@ function BluetoothAccessory(log, config) {
         {"type": "SerialNumber", "UUID": "2A25"}
       ]
     };
-    this.bluetoothServices[informationServiceUUID] = new BluetoothService(this.log, informationServiceConfig, this.prefix);
+    this.bluetoothServices[informationServiceUUID]
+        = new BluetoothService(this.log, informationServiceConfig, this.prefix);
   }
 
   this.homebridgeAccessory = null;
@@ -88,7 +90,8 @@ BluetoothAccessory.prototype.discoverServices = function (error, nobleServices) 
 
     var homebridgeService = this.homebridgeAccessory.getService(bluetoothService.class);
     if (!homebridgeService) {
-      homebridgeService = this.homebridgeAccessory.addService(bluetoothService.class, bluetoothService.name);
+      homebridgeService = this.homebridgeAccessory.addService(bluetoothService.class,
+                                                              bluetoothService.name);
     }
     bluetoothService.connect(nobleService, homebridgeService);
   }
