@@ -27,7 +27,7 @@ function BluetoothCharacteristic(log, config, prefix) {
   }
   this.UUID = config.UUID;
 
-  this.log.info(this.prefix, "Initialized | Characteristic." + this.type + " - " + this.UUID);
+  this.log.debug(this.prefix, "Initialized | Characteristic." + this.type + " (" + this.UUID + ")");
 
   this.homebridgeCharacteristic = null;
   this.nobleCharacteristic = null;
@@ -35,7 +35,8 @@ function BluetoothCharacteristic(log, config, prefix) {
 
 
 BluetoothCharacteristic.prototype.connect = function (nobleCharacteristic, homebridgeCharacteristic) {
-  this.log.info(this.prefix, "Connected | Characteristic." + this.type + " - " + this.UUID);
+  this.log.info(this.prefix, "Connected");
+  this.log.debug(this.prefix, "Characteristic." + this.type + " (" + this.UUID + ")");
   this.homebridgeCharacteristic = homebridgeCharacteristic;
 
   this.nobleCharacteristic = nobleCharacteristic;
@@ -64,7 +65,7 @@ BluetoothCharacteristic.prototype.connect = function (nobleCharacteristic, homeb
             }
           }.bind(this));
         } else {
-          this.log(this.prefix, "Subscribe to bluetooth characteristic not permitted");
+          this.log.warn(this.prefix, "Subscribe to bluetooth characteristic not permitted");
         }
         break;
     }

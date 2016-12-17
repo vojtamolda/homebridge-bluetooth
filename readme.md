@@ -85,8 +85,10 @@ The corresponding entry in the `config.json` file that connects to the character
 Depending on your privileges, accessing the BLE kernel subsystem may need root permissions.
 
 ```sh
-[sudo] homebridge
+[sudo] homebridge -D
 ```
+
+**Note** _Running with `-D` turns on additional debugging output that is very helpful for getting addresses and UUIDs of your BLE devices that needs to match with the `config.json` file._
 
 **Note** _See [this section of Noble readme](https://github.com/sandeepmistry/noble#running-without-rootsudo) for more details about running without `sudo`._
 

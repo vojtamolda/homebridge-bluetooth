@@ -37,7 +37,7 @@ function BluetoothService(log, config, prefix) {
     throw new Error(this.prefix + " Missing mandatory config 'characteristics'");
   }
 
-  this.log.info(this.prefix, "Initialized | Service." + this.type + " - " + this.UUID);
+  this.log.debug(this.prefix, "Initialized | Service." + this.type + " (" + this.UUID + ")");
   this.bluetoothCharacteristics = {};
   for (var characteristicConfig of config.characteristics) {
     var characteristicUUID = trimUUID(characteristicConfig.UUID);
@@ -51,7 +51,8 @@ function BluetoothService(log, config, prefix) {
 
 
 BluetoothService.prototype.connect = function (nobleService, homebridgeService) {
-  this.log.info(this.prefix, "Connected | Service." + this.type + " - " + this.UUID);
+  this.log.info(this.prefix, "Connected");
+  this.log.debug(this.prefix, "Service." + this.type + " (" + this.UUID + ")");
   this.homebridgeService = homebridgeService;
 
   this.nobleService = nobleService;
@@ -73,7 +74,7 @@ BluetoothService.prototype.discoverCharacteristics = function (error, nobleChara
     var characteristicUUID = trimUUID(nobleCharacteristic.uuid);
     var bluetoothCharacteristic = this.bluetoothCharacteristics[characteristicUUID];
     if (!bluetoothCharacteristic) {
-      this.log.info(this.prefix, "Ignored | Characteristic - " + nobleCharacteristic.uuid);
+      this.log.debug(this.prefix, "Ignored | Characteristic (" + nobleCharacteristic.uuid + ")");
       continue;
     }
 

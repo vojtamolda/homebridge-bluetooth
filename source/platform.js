@@ -33,13 +33,13 @@ BluetoothPlatform.prototype.configureAccessory = function (homebridgeAccessory) 
   var accessoryAddress = homebridgeAccessory.context['address'];
   var bluetoothAccessory = this.bluetoothAccessories[accessoryAddress];
   if (!bluetoothAccessory) {
-    this.log.info("Removed | " + homebridgeAccessory.name + " - " + accessoryAddress);
+    this.log.debug("Removed | " + homebridgeAccessory.displayName + " (" + accessoryAddress + ")");
     this.homebridgeAPI.unregisterPlatformAccessories("homebridge-bluetooth", "Bluetooth",
                                                      [homebridgeAccessory]);
     return;
   }
 
-  this.log.info("Persist | " + homebridgeAccessory.name + " - " + accessoryAddress);
+  this.log.debug("Persist | " + homebridgeAccessory.displayName + " (" + accessoryAddress + ")");
   this.cachedHomebridgeAccessories[accessoryAddress] = homebridgeAccessory;
 };
 
@@ -65,13 +65,13 @@ BluetoothPlatform.prototype.discover = function (nobleAccessory) {
   var accessoryAddress = trimAddress(nobleAccessory.address);
   var bluetoothAccessory = this.bluetoothAccessories[accessoryAddress];
   if (!bluetoothAccessory) {
-    this.log.info("Ignored | " + nobleAccessory.advertisement.localName +
-                  " - " + nobleAccessory.address + " RSSI: " + nobleAccessory.rssi + "dB");
+    this.log.debug("Ignored | " + nobleAccessory.advertisement.localName +
+                  " (" + nobleAccessory.address + ") | RSSI " + nobleAccessory.rssi + "dB");
     return;
   }
 
-  this.log.info("Discovered | " + nobleAccessory.advertisement.localName +
-                " - " + nobleAccessory.address + " RSSI: " + nobleAccessory.rssi + "dB");
+  this.log.debug("Discovered | " + nobleAccessory.advertisement.localName +
+                " (" + nobleAccessory.address + ") | RSSI " + nobleAccessory.rssi + "dB");
   nobleAccessory.connect(function (error) {
     this.connect(error, nobleAccessory)
   }.bind(this));
@@ -81,7 +81,7 @@ BluetoothPlatform.prototype.discover = function (nobleAccessory) {
 BluetoothPlatform.prototype.connect = function (error, nobleAccessory) {
   if (error) {
     this.log.error("Connecting failed | " + nobleAccessory.advertisement.localName +
-                   " - " + nobleAccessory.address + " | " + error);
+                   " (" + nobleAccessory.address + ") | " + error);
     return;
   }
 

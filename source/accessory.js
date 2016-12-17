@@ -27,7 +27,7 @@ function BluetoothAccessory(log, config) {
     throw new Error(this.prefix + " Missing mandatory config 'services'");
   }
 
-  this.log.info(this.prefix, "Initialized | " + this.name + " - " + this.address);
+  this.log.debug(this.prefix, "Initialized | " + this.name + " (" + this.address + ")");
   this.bluetoothServices = {};
   for (var serviceConfig of config.services) {
     var serviceUUID = trimUUID(serviceConfig.UUID);
@@ -57,7 +57,7 @@ function BluetoothAccessory(log, config) {
 
 
 BluetoothAccessory.prototype.connect = function (nobleAccessory, homebridgeAccessory) {
-  this.log.info(this.prefix, "Connected | " + this.name + " - " + this.address);
+  this.log.info(this.prefix, "Connected | " + this.name + " (" + this.address + ")");
   this.homebridgeAccessory = homebridgeAccessory;
   this.homebridgeAccessory.on('identify', this.identification.bind(this));
   this.homebridgeAccessory.updateReachability(true);
@@ -83,7 +83,7 @@ BluetoothAccessory.prototype.discoverServices = function (error, nobleServices) 
     var bluetoothService = this.bluetoothServices[serviceUUID];
     if (!bluetoothService) {
       if (nobleService.uuid != '1800' && nobleService.uuid != '1801') {
-        this.log.info(this.prefix, "Ignored | Service - " + nobleService.uuid);
+        this.log.debug(this.prefix, "Ignored | Service (" + nobleService.uuid + ")");
       }
       continue;
     }
@@ -106,7 +106,7 @@ BluetoothAccessory.prototype.identification = function (paired, callback) {
 
 BluetoothAccessory.prototype.disconnect = function (error) {
   if (error) {
-    this.log.error("Disconnecting failed | " + this.name + " - " + this.address + " | " + error);
+    this.log.error("Disconnecting failed | " + this.name + " (" + this.address + ") | " + error);
   }
 
   for (var serviceUUID in this.bluetoothServices) {

@@ -70,8 +70,10 @@ Edit the `~/.homebridge/config.json`, name your Homebridge server and add a new 
 Finally, start the Homebridge server. If you use Linux you may need to run with higher privileges in order to have access to the BLE hardware layer. See [this link](https://github.com/sandeepmistry/noble#running-without-rootsudo) for more details about running without `sudo`.
 
 ```sh
-[sudo] homebridge
+[sudo] homebridge -D
 ```
+
+**Note** _Running with `-D` turns on additional debugging output that is very helpful for getting addresses and UUIDs of your BLE devices that needs to match with the `config.json` file._
 
 <img src="images/homebridge.png">
 
