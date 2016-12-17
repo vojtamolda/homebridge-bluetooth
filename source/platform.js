@@ -99,7 +99,7 @@ BluetoothPlatform.prototype.connect = function (error, nobleAccessory) {
   }
 
   bluetoothAccessory.connect(nobleAccessory, homebridgeAccessory);
-  nobleAccessory.on('disconnect', function (error) {
+  nobleAccessory.once('disconnect', function (error) {
     this.disconnect(nobleAccessory, homebridgeAccessory, error);
   }.bind(this));
 
@@ -112,7 +112,6 @@ BluetoothPlatform.prototype.connect = function (error, nobleAccessory) {
 BluetoothPlatform.prototype.disconnect = function (nobleAccessory, homebridgeAccessory, error) {
   var accessoryAddress = trimAddress(nobleAccessory.address);
   this.cachedHomebridgeAccessories[accessoryAddress] = homebridgeAccessory;
-  nobleAccessory.removeAllListeners('disconnect');
 
   Noble.startScanning([], false);
 };

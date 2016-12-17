@@ -59,11 +59,11 @@ function BluetoothAccessory(log, config) {
 BluetoothAccessory.prototype.connect = function (nobleAccessory, homebridgeAccessory) {
   this.log.info(this.prefix, "Connected | " + this.name + " - " + this.address);
   this.homebridgeAccessory = homebridgeAccessory;
-  this.homebridgeAccessory.on('identify', this.identify.bind(this));
+  this.homebridgeAccessory.on('identify', this.identification.bind(this));
   this.homebridgeAccessory.updateReachability(true);
 
   this.nobleAccessory = nobleAccessory;
-  this.nobleAccessory.on('disconnect', this.disconnect.bind(this));
+  this.nobleAccessory.once('disconnect', this.disconnect.bind(this));
   this.nobleAccessory.discoverServices([], this.discoverServices.bind(this));
 };
 
@@ -98,7 +98,7 @@ BluetoothAccessory.prototype.discoverServices = function (error, nobleServices) 
 };
 
 
-BluetoothAccessory.prototype.identify = function (paired, callback) {
+BluetoothAccessory.prototype.identification = function (paired, callback) {
   this.log.info(this.prefix, "Identify");
   callback();
 };
@@ -115,7 +115,6 @@ BluetoothAccessory.prototype.disconnect = function (error) {
   if (this.nobleAccessory && this.homebridgeAccessory) {
     this.homebridgeAccessory.removeAllListeners('identify');
     this.homebridgeAccessory.updateReachability(false);
-    this.nobleAccessory.removeAllListeners('disconnect');
     this.homebridgeAccessory = null;
     this.nobleAccessory = null;
     this.log.info(this.prefix, "Disconnected");
