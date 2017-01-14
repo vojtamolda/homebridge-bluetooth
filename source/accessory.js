@@ -116,6 +116,7 @@ BluetoothAccessory.prototype.disconnect = function (error) {
     this.homebridgeAccessory.removeAllListeners('identify');
     this.homebridgeAccessory.updateReachability(false);
     this.homebridgeAccessory = null;
+    this.nobleAccessory.removeAllListeners();
     this.nobleAccessory = null;
     this.log.info(this.prefix, "Disconnected");
   }
