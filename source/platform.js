@@ -13,8 +13,14 @@ module.exports = function (noble, uuidGen, accessory, bluetoothAccessory) {
 function BluetoothPlatform(log, config, homebridgeAPI) {
   this.log = log;
 
+  if (!config) {
+    this.log.warn("Missing mandatory platform config named 'Bluetooth'");
+    return;
+  }
+
   if (!config.accessories || !(config.accessories instanceof Array)) {
-    throw new Error("Missing mandatory config 'accessories'");
+    this.log.warn("Missing mandatory config 'accessories'");
+    return;
   }
   this.bluetoothAccessories = {};
   for (var accessoryConfig of config.accessories) {
