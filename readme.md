@@ -71,7 +71,7 @@ The corresponding entry in the `config.json` file that connects to the character
 "services" : [ {
     "name": "The Best HomeKit Thermometer",
     "type": "TemperatureSensor",
-    "UUID": "SERVICE-UUID-HERE"
+    "UUID": "SERVICE-UUID-HERE",
     "characteristics": [ {
         "type": "CurrentTemperature",
         "UUID": "CHARACTERISTIC-UUID-HERE"
